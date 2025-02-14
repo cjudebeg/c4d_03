@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Profile</title>
+</head>
+<body>
+    <h2>Profile Information</h2>
+    <p>Email: {{ request.user.email }}</p>
+    <p>First Name: {{ request.user.profile.first_name }}</p>
+    <p>Middle Name: {{ request.user.profile.middle_name }}</p>
+    <p>Last Name: {{ request.user.profile.last_name }}</p>
+    <p>AGVSA Clearance Number: {{ request.user.profile.agvsa_clearance_number }}</p>
+    <p>Security Clearance: {{ request.user.profile.security_clearance }}</p>
+    <p>Date of Birth: {{ request.user.profile.date_of_birth }}</p>
+    <p>Suburb: {{ request.user.profile.suburb }}</p>
+    <br>
+    <a href="{% url 'login' %}">
+      <button type="button">Logout / Back to Login</button>
+    </a>
+</body>
+</html>

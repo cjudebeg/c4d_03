@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  web:
+    build: .
+    # Overwrites the default CMD in the Dockerfile with Django’s dev server
+    command: python manage.py runserver 0.0.0.0:8000
+
+    volumes:
+      - .:/app
+
+    ports:
+      - "8009:8000"
+
+    depends_on:
+      - db
+
+    environment:
+      POSTGRES_DB: c4d_db_it_3
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: db
+      DJANGO_SETTINGS_MODULE: a_core.settings
+
+    networks:
+      - c4d_network
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: c4d_db_it_3
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
+    # Exposes the Postgres port
+    ports:
+      - "5430:5430"
+
+    networks:
+      - c4d_network
+
+networks:
+  c4d_network:
+    driver: bridge
