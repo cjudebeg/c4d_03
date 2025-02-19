@@ -1,0 +1,29 @@
+<h2>Sign In</h2>
+
+<form method="POST" hx-post="{% url 'account_login' %}" hx-target="#content" hx-swap="outerHTML">
+  {% csrf_token %}
+
+<!-- Manually rendering the fields instead of form.as_p for custom order -->
+  {{ form.non_field_errors }}
+
+  <p>
+    <label for="id_login">Email:</label>
+    {{ form.login }}
+  </p>
+
+  <p>
+    <label for="id_password">Password:</label>
+    {{ form.password }}
+  </p>
+
+  <div style="display: flex; gap: 10px;">
+    <button type="submit">Sign In</button>
+    <a hx-get="{% url 'account_signup' %}" hx-target="#content" hx-swap="outerHTML">
+      <button type="button">Register</button>
+    </a>
+  </div>
+
+  <div style="margin-top: 10px;">
+    <a href="{% url 'account_reset_password' %}">Forgot your password?</a>
+  </div>
+</form>

@@ -1,0 +1,12 @@
+<h2>Register</h2>
+<form method="POST" hx-post="{% url 'account_signup' %}" hx-target="#content" hx-swap="outerHTML">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <div style="display: flex; gap: 10px;">
+        <button type="submit">Register</button>
+        <a href="{% url 'account_logout' %}">
+            <button type="button">Back to Sign In</button>
+        </a>
+    </div>
+</form>

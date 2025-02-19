@@ -1,0 +1,5 @@
+Django==5.0.7
+asgiref==3.8.1
+sqlparse==0.5.3
+psycopg2-binary
+django-allauth==65.4.1
