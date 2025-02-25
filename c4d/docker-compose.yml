@@ -25,18 +25,21 @@ services:
 
   db:
     image: postgres:16
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
     environment:
       POSTGRES_DB: c4d_db_it_3
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-
     # Exposes the Postgres port
     ports:
       - "5430:5430"
-
     networks:
       - c4d_network
 
 networks:
   c4d_network:
     driver: bridge
+
+volumes:
+  postgres_data:

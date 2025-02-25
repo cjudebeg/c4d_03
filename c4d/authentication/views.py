@@ -6,56 +6,6 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from .forms import ProfileUpdateForm
 
-# from .forms import CustomUserChangeForm, LoginForm
-
-# def register_view(request):
-#     try:
-#         if request.method == "POST":
-#             form = CustomUserChangeForm(request.POST)
-#             if form.is_valid():
-#                 form.save()
-#                 return redirect("login")
-#             else:
-#                 print("Registration form errors:", form.errors)  
-#         else:
-#             form = CustomUserChangeForm()
-#         return render(request, "register.html", {"form": form})
-    
-#     except IntegrityError as e:  # Handles duplicate email issues
-#         print(f"Database error: {e}")
-#         form.add_error("email", "This email is already registered.")
-#         return render(request, "register.html", {"form": form})
-    
-#     except Exception as e:  # Catch-all for unexpected errors
-#         print(f"Unexpected error in register_view: {e}")
-#         return render(request, "register.html", {"form": form, "error": "Something went wrong. Please try again."})
-
-
-# def login_view(request):
-#     try:
-#         if request.method == "POST":
-#             form = LoginForm(request.POST)
-#             if form.is_valid():
-#                 email = form.cleaned_data.get("email")
-#                 password = form.cleaned_data.get("password")
-
-#                 # USERNAME = 'email'
-#                 user = authenticate(request, username=email, password=password)
-#                 if user is not None:
-#                     login(request, user)
-#                     return redirect("profile")
-#                 else:
-#                     form.add_error(None, "Invalid credentials. Please try again.")
-#         else:
-#             form = LoginForm()
-#         return render(request, "login.html", {"form": form})
-    
-#     except Exception as e:
-#         print(f"Unexpected error in login_view: {e}")
-#         return render(request, "login.html", {"form": form, "error": "Something went wrong. Please try again."})
-
-
-
 
 @login_required  
 def profile_view(request):

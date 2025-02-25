@@ -18,20 +18,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import RedirectView
+from .views import ping
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-
-    path('', RedirectView.as_view(url='/accounts/login/'), name='home'),
-
-    path('auth/', include('authentication.urls')),
-
+    path("admin/", admin.site.urls),
+    path("ping/", ping, name="ping"),
+    path("", RedirectView.as_view(url="/accounts/login/"), name="home"),
+    path("auth/", include("authentication.urls")),
     # Allauth's built-in authentication routes (/accounts/login/, /accounts/signup/, etc.)
-    path('accounts/', include('allauth.account.urls')),
-
-    path('__debug__/', include('debug_toolbar.urls')),
-
+    path("accounts/", include("allauth.account.urls")),
+    path("__debug__/", include("debug_toolbar.urls")),
 ]
-
-
-
