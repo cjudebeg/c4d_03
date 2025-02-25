@@ -55,36 +55,34 @@ from .forms import ProfileUpdateForm
 #         return render(request, "login.html", {"form": form, "error": "Something went wrong. Please try again."})
 
 
-@login_required
+
+
+@login_required  
 def profile_view(request):
     try:
-        # Get the loggedin users prof
+        # Try to get the profile for the current user
         profile = request.user.profile
-        
-        if request.method == "POST":
-            form = ProfileUpdateForm(request.POST, instance=profile)
-            if form.is_valid():
-                form.save()  
-                return redirect("profile")
-        else:
-            # Display the form with current profile data
-            form = ProfileUpdateForm(instance=profile)
-        
-        context = {
-            "form": form,
-            "username": request.user.username,  # Auto generated username
-            "email": request.user.email,          
-        }
-        return render(request, "profile.html", context)
-    
     except ObjectDoesNotExist:
         return render(request, "profile.html", {
             "error": "Profile data is missing. Please contact support or register again."
         })
-    except Exception as e:
-        # Catching all unexpected errors
-        print(f"Unexpected error in profile_view: {e}")
-        return render(request, "profile.html", {
-            "error": "Something went wrong. Please try again later."
-        })
+
+    if request.method == "POST":
+        form = ProfileUpdateForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+
+            return redirect("profile")
+    else:
+        # For GET requests load the form with existing data
+        form = ProfileUpdateForm(instance=profile)
+
+    context = {
+        "form": form,
+        "email": request.user.email,
+    }
+    return render(request, "profile.html", context)
+
+
+
 

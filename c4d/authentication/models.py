@@ -1,21 +1,25 @@
+import uuid
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
+from .managers import CustomUserManager
 
 class CustomUser(AbstractUser):
+    # Custom user model that uses email as the primary identifier
+    # Users reg with email and pwd
 
-    # Custom User model that uses email as the primary identifier. Users reg with email and pwd.
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    username = None
+    email = models.EmailField(_('email address'), unique=True)
 
-    # username = models.CharField(max_length=150, unique=True)
-    # email = models.EmailField(_('email address'), unique=True)
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = [] 
 
-    # USERNAME_FIELD = 'email'
-    # REQUIRED_FIELDS = ['username']  # This forces createsuperuser to ask for username
+    objects = CustomUserManager()
 
-    # def __str__(self):
-    #     return self.email
-    pass
+    def __str__(self):
+        return self.email
 
 
 STATE_CHOICES = [
@@ -37,9 +41,8 @@ CLEARANCE_LEVEL_CHOICES = [
     ('PV', 'PV'),
 ]
 
-
 class Profile(models.Model):
-    # Link profile to the Customuser model one to one
+    # Link profile to the customuser model one to one
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -60,14 +63,3 @@ class Profile(models.Model):
 
     def __str__(self):
         return f"Profile of {self.user.email}"
-
-# Automatically create/update profile when a customUser is saved.
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_or_update_profile(sender, instance, created, **kwargs):
-    if created:
-        Profile.objects.create(user=instance)  
-    else:
-        instance.profile.save()  # Save/update profile for existing user

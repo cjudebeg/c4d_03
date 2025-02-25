@@ -28,6 +28,10 @@ urlpatterns = [
 
     # Allauth's built-in authentication routes (/accounts/login/, /accounts/signup/, etc.)
     path('accounts/', include('allauth.account.urls')),
+
+    path('__debug__/', include('debug_toolbar.urls')),
+
 ]
+
 
 

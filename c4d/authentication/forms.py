@@ -128,25 +128,13 @@ class CustomUserChangeForm(UserChangeForm):
     #         profile.suburb = self.cleaned_data.get("suburb", "")
     #         profile.save()
     #     return user
-
-    pass
     
-
-# class LoginForm(forms.Form):
-
-#     email = forms.EmailField(
-#         widget=forms.EmailInput(attrs={"placeholder": "Enter your email"}),
-#         required=True,
-#     )
-#     password = forms.CharField(
-#         widget=forms.PasswordInput(attrs={"placeholder": "Enter your password"}),
-#         required=True,
-#     )
+    pass
 
 
 class ProfileUpdateForm(forms.ModelForm):
     class Meta:
-        model = Profile
+        model = Profile 
         fields = [
             "first_name",
             "middle_name",
@@ -158,10 +146,12 @@ class ProfileUpdateForm(forms.ModelForm):
             "clearance_no",
             "clearance_expiry",
         ]
+
         widgets = {
             "date_of_birth": forms.DateInput(attrs={'type': 'date', 'placeholder': 'DD/MM/YYYY'}),
             "clearance_expiry": forms.DateInput(attrs={'type': 'date', 'placeholder': 'Expiry DD/MM/YYYY'}),
         }
+
         labels = {
             "date_of_birth": "Date of Birth",
             "state": "Your Location",
@@ -169,6 +159,7 @@ class ProfileUpdateForm(forms.ModelForm):
             "clearance_no": "CSID Number",
             "clearance_expiry": "Expiry Date",
         }
+
         help_texts = {
             "state": "Select state/territory.",
             "clearance_level": "Select from the list",
@@ -176,41 +167,45 @@ class ProfileUpdateForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        # Initialise the form and update fields
+
         super().__init__(*args, **kwargs)
         self.fields["first_name"].required = True
         self.fields["last_name"].required = True
         self.fields["clearance_level"].required = True
-        
-        # Set input formats for dob
+
         self.fields["date_of_birth"].input_formats = ['%d/%m/%Y', '%Y-%m-%d']
-        
-        # Placeholder for state nd clearance_level
+
         original_state_choices = list(self.fields["state"].choices)
         self.fields["state"].choices = [('', 'Select State/Territory')] + original_state_choices
-        
+
         original_clearance_choices = list(self.fields["clearance_level"].choices)
         self.fields["clearance_level"].choices = [('', 'Select from the list')] + original_clearance_choices
-        
+
         self.fields["first_name"].widget.attrs.update({"placeholder": "First Name"})
         self.fields["last_name"].widget.attrs.update({"placeholder": "Last Name"})
         self.fields["date_of_birth"].widget.attrs.update({"placeholder": "DD/MM/YYYY"})
         self.fields["suburb"].widget.attrs.update({"placeholder": "State/Territory, Suburb"})
         self.fields["clearance_no"].widget.attrs.update({"placeholder": "CSID number"})
-    
+
     def clean_clearance_no(self):
+
         clearance_no = self.cleaned_data.get("clearance_no")
         if clearance_no:
-            # Ensuring the value starts with CS
+
             if not clearance_no.startswith("CS"):
                 clearance_no = "CS" + clearance_no
             numeric_part = clearance_no[2:]
+
             if not numeric_part.isdigit():
                 raise forms.ValidationError("The CSID number must contain only digits after 'CS'.")
+            # Ensure the numeric part is within 20 len
             if not (5 <= len(numeric_part) <= 20):
                 raise forms.ValidationError("The numeric part must be between 5 and 20 digits.")
         return clearance_no
 
     def clean(self):
+        # Check either location / clearance details are provided
         cleaned_data = super().clean()
         dob = cleaned_data.get("date_of_birth")
         state = cleaned_data.get("state")
@@ -219,8 +214,8 @@ class ProfileUpdateForm(forms.ModelForm):
         clearance_no = cleaned_data.get("clearance_no")
         clearance_expiry = cleaned_data.get("clearance_expiry")
 
-        # Either complete location details (dob, state, sub) or complete clearance details (clearance_level, clearance_no, clearance_expiry) is required
         location_complete = dob and state and suburb
+
         clearance_complete = clearance_level and clearance_no and clearance_expiry
 
         if not (location_complete or clearance_complete):

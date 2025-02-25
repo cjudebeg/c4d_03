@@ -1,7 +1,22 @@
 {% extends "base.html" %}
 
-{% block title %}My Profile{% endblock %}
+{% block title %}
+  My Profile
+{% endblock %}
 
 {% block content %}
-    {% include "partials/profile_info.html" %}
+  <h2>Profile</h2>
+  <p><strong>Note:</strong> We need your Full Name, Security Clearance Level, and AGVSA Clearance Number for security purposes. If you don't remember the AGVSA Clearance Number, then please provide your Date of Birth and Suburb of residence.</p>
+  {% if error %}
+    <p style="color: red;">{{ error }}</p>
+  {% endif %}
+  <form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <p><strong>Email:</strong> {{ email }}</p>
+    <div style="display: flex; gap: 10px;">
+      <button type="submit" name="save_profile">Save Profile</button>
+      <a href="{% url 'account_logout' %}"><button type="button">Logout</button></a>
+    </div>
+  </form>
 {% endblock %}
