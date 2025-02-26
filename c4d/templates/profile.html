@@ -1,22 +1,25 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
-{% block title %}
-  My Profile
-{% endblock %}
+{% block title %}My Profile{% endblock %}
 
-{% block content %}
-  <h2>Profile</h2>
-  <p><strong>Note:</strong> We need your Full Name, Security Clearance Level, and AGVSA Clearance Number for security purposes. If you don't remember the AGVSA Clearance Number, then please provide your Date of Birth and Suburb of residence.</p>
+{% block layout %}
+<main class="max-w-4xl mx-auto p-8">
+  <h2 class="text-2xl font-bold mb-4">Profile</h2>
+  <p class="mb-4">
+    <strong>Note:</strong> We need your Full Name, Security Clearance Level, and AGVSA Clearance Number for security purposes.
+    If you don't remember the AGVSA Clearance Number, then please provide your Date of Birth and Suburb of residence.
+  </p>
   {% if error %}
-    <p style="color: red;">{{ error }}</p>
+    <p class="text-red-500">{{ error }}</p>
   {% endif %}
   <form method="POST">
     {% csrf_token %}
     {{ form.as_p }}
     <p><strong>Email:</strong> {{ email }}</p>
-    <div style="display: flex; gap: 10px;">
-      <button type="submit" name="save_profile">Save Profile</button>
-      <a href="{% url 'account_logout' %}"><button type="button">Logout</button></a>
+    <div class="flex gap-4 mt-4">
+      <button type="submit" name="save_profile" class="bg-blue-500 text-white py-2 px-4 rounded">Save Profile</button>
+      <a href="{% url 'account_logout' %}" class="bg-gray-500 text-white py-2 px-4 rounded">Logout</a>
     </div>
   </form>
+</main>
 {% endblock %}

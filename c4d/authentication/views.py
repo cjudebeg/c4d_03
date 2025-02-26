@@ -82,7 +82,3 @@ def profile_view(request):
         "email": request.user.email,
     }
     return render(request, "profile.html", context)
-
-
-
-

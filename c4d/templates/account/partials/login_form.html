@@ -1,29 +1,22 @@
-<h2>Sign In</h2>
-
-<form method="POST" hx-post="{% url 'account_login' %}" hx-target="#content" hx-swap="outerHTML">
+<h2 class="text-xl font-bold mb-4">Sign In</h2>
+<form method="POST" action="{% url 'account_login' %}" hx-target="#content" hx-swap="outerHTML">
   {% csrf_token %}
-
-<!-- Manually rendering the fields instead of form.as_p for custom order -->
   {{ form.non_field_errors }}
-
-  <p>
-    <label for="id_login">Email:</label>
+  <div class="mb-6" style="padding-bottom: 16px;">
+    <label for="id_login" class="block mb-2">Email:</label>
     {{ form.login }}
-  </p>
-
-  <p>
-    <label for="id_password">Password:</label>
+  </div>
+  <div class="mb-6" style="padding-bottom: 10px;">
+    <label for="id_password" class="block mb-2">Password:</label>
     {{ form.password }}
-  </p>
-
-  <div style="display: flex; gap: 10px;">
-    <button type="submit">Sign In</button>
-    <a hx-get="{% url 'account_signup' %}" hx-target="#content" hx-swap="outerHTML">
-      <button type="button">Register</button>
+  </div>
+  <div class="flex gap-6" style="padding-bottom: 10px;">
+    <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded">Sign In</button>
+    <a href="{% url 'account_signup' %}" hx-target="#content" hx-swap="outerHTML">
+      <button type="button" class="bg-green-500 text-white py-2 px-4 rounded">Register</button>
     </a>
   </div>
-
-  <div style="margin-top: 10px;">
-    <a href="{% url 'account_reset_password' %}">Forgot your password?</a>
+  <div class="mt-6">
+    <a href="{% url 'account_reset_password' %}" class="text-blue-600 hover:underline">Forgot your password?</a>
   </div>
 </form>

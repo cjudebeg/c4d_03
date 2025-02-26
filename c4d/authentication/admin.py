@@ -4,20 +4,20 @@ from .models import CustomUser, Profile
 from .forms import CustomUserChangeForm
 
 class CustomUserAdmin(UserAdmin):
-    form = CustomUserChangeForm  # Form used in admin for user updation
+    form = CustomUserChangeForm  # Form used in admin for user updates
     model = CustomUser
 
     list_display = ('email', 'is_staff', 'is_active')
     list_filter = ('email', 'is_staff', 'is_active')
 
-    # fields during editing a user
+    # Fields displayed during user editing
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
         ('Permissions', {'fields': ('is_staff', 'is_active', 'groups', 'user_permissions')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
     
-    # fields during adding a new user
+    # Fields displayed when adding new user
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
@@ -28,6 +28,13 @@ class CustomUserAdmin(UserAdmin):
     search_fields = ('email',)
     ordering = ('email',)
 
+class ProfileAdmin(admin.ModelAdmin):
 
+    # Custom admin for Profile that exclude profiles belonging to superuser
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.exclude(user__is_superuser=True)
+
+# Register the custom user model and Profile with the custom admin.
 admin.site.register(CustomUser, CustomUserAdmin)
-admin.site.register(Profile)
+admin.site.register(Profile, ProfileAdmin)

@@ -1,0 +1,10 @@
+{% if messages %}
+<div class="fixed top-4 left-0 right-0 flex justify-center">
+  <div class="bg-blue-500 text-white p-4 rounded-lg shadow-md" x-data="{ show: false }"
+       x-init="show = true; setTimeout(() => show = false, 6000)" x-show="show">
+    {% for message in messages %}
+      <p>{{ message }}</p>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}

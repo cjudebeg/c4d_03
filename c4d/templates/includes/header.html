@@ -1,0 +1,21 @@
+{% load static %}
+<header class="flex items-center justify-between bg-gray-800 p-4 text-white">
+  <div>
+    <a href="/" class="flex items-center">
+      <!-- <img src="{% static 'images/logo.png' %}" alt="Logo" class="h-8 w-8 mr-2"> -->
+      <span class="font-bold text-lg">C4 Defence</span>
+    </a>
+  </div>
+  <nav>
+    <ul class="flex space-x-4">
+      {% if request.user.is_authenticated %}
+        <li><a href="/" class="hover:underline">Home</a></li>
+        <li><a href="{% url 'profile' %}" class="hover:underline">Profile</a></li>
+        <li><a href="{% url 'account_logout' %}" class="hover:underline">Logout</a></li>
+      {% else %}
+        <li><a href="{% url 'account_login' %}" class="hover:underline">Sign In</a></li>
+        <li><a href="{% url 'account_signup' %}" class="hover:underline">Register</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+</header>

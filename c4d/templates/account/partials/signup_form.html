@@ -1,12 +1,11 @@
-<h2>Register</h2>
-<form method="POST" hx-post="{% url 'account_signup' %}" hx-target="#content" hx-swap="outerHTML">
+<h2 class="text-xl font-bold mb-4">Register</h2>
+<form method="POST" href="{% url 'account_signup' %}" hx-target="#content" hx-swap="outerHTML">
     {% csrf_token %}
     {{ form.as_p }}
-
-    <div style="display: flex; gap: 10px;">
-        <button type="submit">Register</button>
+    <div class="flex gap-4 mt-4">
+        <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded">Register</button>
         <a href="{% url 'account_logout' %}">
-            <button type="button">Back to Sign In</button>
+            <button type="button" class="bg-gray-500 text-white py-2 px-4 rounded">Back to Sign In</button>
         </a>
     </div>
 </form>

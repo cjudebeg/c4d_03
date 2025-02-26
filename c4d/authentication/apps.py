@@ -5,4 +5,4 @@ class UsersConfig(AppConfig):
     name = 'authentication'
 
     def ready(self):
-        import authentication.signals
+        import authentication.signals 

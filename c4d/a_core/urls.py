@@ -22,7 +22,7 @@ from django.views.generic import RedirectView
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    path('', RedirectView.as_view(url='/accounts/login/'), name='home'),
+    path('', RedirectView.as_view(url='/accounts/login/'), name='home'), # RedirectView part of Django generic class based views
 
     path('auth/', include('authentication.urls')),
 
