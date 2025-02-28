@@ -61,5 +61,14 @@ class Profile(models.Model):
     clearance_no = models.CharField(max_length=50, blank=True, null=True)
     clearance_expiry = models.DateField(blank=True, null=True)
 
+    # displayname = models.CharField(max_length=100, blank=True, null=True)
+
+
+    skill_sets = models.TextField(blank=True, null=True)
+    skill_level = models.CharField(max_length=100, blank=True, null=True)
+
+    # New field for tracking onboarding
+    onboarding_completed = models.BooleanField(default=False)
+
     def __str__(self):
         return f"Profile of {self.user.email}"

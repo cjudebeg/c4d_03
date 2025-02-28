@@ -1,0 +1,42 @@
+{% extends 'layouts/box.html' %}
+{% load static %}
+
+{% block content %}
+
+{% if onboarding %}
+<h2 class="mb-4">Complete your Profile</h2>
+{% else %}
+<h2 class="mb-4">Edit your Profile</h2>
+{% endif %}
+
+<div class="text-center flex flex-col items-center">
+
+    <!-- {% if user.profile.avatar %}
+      <img id="avatar" class="w-36 h-36 rounded-full object-cover my-4"
+           src="{{ user.profile.avatar.url }}"
+           alt="Avatar" />
+    {% else %}
+      <img id="avatar" class="w-36 h-36 rounded-full object-cover my-4"
+           src="{% static 'images/default-avatar.png' %}"
+           alt="Avatar" />
+    {% endif %} -->
+
+    <div class="text-center max-w-md">
+        <div class="text-gray-400 mb-2 -mt-3"><strong>Email: </strong>{{ user.email }}</div>
+    </div>
+</div>
+
+<form method="POST" enctype="multipart/form-data" class="space-y-4">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded">Submit</button>
+
+    {% if onboarding %}
+      <a class="bg-gray-500 text-white py-2 px-4 rounded ml-1" href="{% url 'home' %}">Skip</a>
+    {% else %}
+      <a class="bg-gray-500 text-white py-2 px-4 rounded ml-1" href="{{ request.META.HTTP_REFERER }}">Cancel</a>
+    {% endif %}
+</form>
+
+{% endblock %}

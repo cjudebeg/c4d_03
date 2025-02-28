@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}C4D{% endblock %}
+{% include 'includes/header.html' %}
+{% block layout %}
+<div class="max-w-4xl mx-auto p-8">
+  <h1 class="text-3xl font-bold mb-4">Landing page of C4 Defence</h1>
+  <p class="mb-4">
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+    Proin ultrices dui nec dui sollicitudin accumsan.
+    Curabitur et odio quis ante tincidunt sodales eget nec lorem.
+  </p>
+
+  <div class="flex gap-4 mt-6">
+    <a href="{% url 'account_login' %}" class="bg-blue-500 text-white px-4 py-2 rounded">Sign In</a>
+    <a href="{% url 'account_signup' %}" class="bg-green-500 text-white px-4 py-2 rounded">Register</a>
+  </div>
+</div>
+{% endblock %}

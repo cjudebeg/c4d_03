@@ -10,7 +10,7 @@
     <label for="id_password" class="block mb-2">Password:</label>
     {{ form.password }}
   </div>
-  <div class="flex gap-6" style="padding-bottom: 10px;">
+  <div class="flex gap-6" style="padding-bottom: 10px; padding-top: 5px;">
     <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded">Sign In</button>
     <a href="{% url 'account_signup' %}" hx-target="#content" hx-swap="outerHTML">
       <button type="button" class="bg-green-500 text-white py-2 px-4 rounded">Register</button>

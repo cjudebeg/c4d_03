@@ -1,19 +1,27 @@
 from pathlib import Path
 import os
 import socket
+import environ
+
+
+env = environ.Env()
+environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Static files (CSS, JavaScript, Images)
+# Static files
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-tz6pa#7aol4wby+f$bht-or54fs_94*onsf#jq%j3&460w*2n^'
+
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+
+DEBUG = os.environ.get('DEBUG')
+
 ALLOWED_HOSTS = ['*']
 
 # Application definition
@@ -39,6 +47,8 @@ INSTALLED_APPS = [
 ]
 
 AUTH_USER_MODEL = 'authentication.CustomUser'
+
+
 SITE_ID = 1
 
 MIDDLEWARE = [
@@ -81,26 +91,63 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'a_core.wsgi.application'
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',    
+#         'NAME': 'c4d_db_it_3',                        
+#         'USER': 'postgres',                           
+#         'PASSWORD': 'postgres',
+#         'HOST': 'db',  # Docker service name
+#         'PORT': '5432',                               
+#     }
+# }
+
+
 # Database configuration PostgreSQL
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',    
-        'NAME': 'c4d_db_it_3',                        
-        'USER': 'postgres',                           
-        'PASSWORD': 'postgres',
-        'HOST': 'db',  # Docker service name
-        'PORT': '5432',                               
+        'NAME': os.environ.get('DATABASE_NAME'),                        
+        'USER': os.environ.get('DATABASE_USER'),                          
+        'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
+        'HOST': os.environ.get('DATABASE_HOST'),  # Docker service name
+        'PORT': os.environ.get('DATABASE_PORT'),                              
     }
 }
 
 # Password validation settings
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
+
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 12,
+        }
+    },
+
+    {
+        'NAME': 'authentication.validators.MaximumLengthValidator',
+        'OPTIONS': {
+            'max_length': 128,
+        }
+    },
+
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',},
+
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
-    {'NAME': 'authentication.validators.NewPasswordNotSameAsOldValidator',    },  # New Password Not Same As Old Validator
+
+    {'NAME': 'authentication.validators.NewPasswordNotSameAsOldValidator',    },  # New Password Not Same As Old Validator when it is reset
+
+    {
+        'NAME': 'authentication.validators.UnicodePasswordValidator',
+    },
+
+    {
+        'NAME': 'authentication.validators.OneSpaceValidator',
+    },
 ]
+
 
 # Internationalisation settings
 LANGUAGE_CODE = 'en-us'
@@ -116,7 +163,7 @@ ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False 
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None  
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
-ACCOUNT_SIGNUP_REDIRECT_URL = "/accounts/login/"
+ACCOUNT_SIGNUP_REDIRECT_URL = "/"
 LOGIN_REDIRECT_URL = "profile"
 ACCOUNT_LOGOUT_REDIRECT_URL = "account_login"
 

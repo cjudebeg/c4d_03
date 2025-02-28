@@ -35,6 +35,6 @@ class ProfileAdmin(admin.ModelAdmin):
         qs = super().get_queryset(request)
         return qs.exclude(user__is_superuser=True)
 
-# Register the custom user model and Profile with the custom admin.
+# Register the custom user model and Profile with the custom admin
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Profile, ProfileAdmin)

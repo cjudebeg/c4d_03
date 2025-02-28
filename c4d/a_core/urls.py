@@ -15,23 +15,20 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+
 from django.contrib import admin
 from django.urls import path, include
-from django.views.generic import RedirectView
+from authentication.views import home_view  
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    path('', RedirectView.as_view(url='/accounts/login/'), name='home'), # RedirectView part of Django generic class based views
+    path('', home_view, name='home'),
 
     path('auth/', include('authentication.urls')),
 
-    # Allauth's built-in authentication routes (/accounts/login/, /accounts/signup/, etc.)
+    # Allauth built in authentication routes (/accounts/login/, /accounts/signup/, etc.)
     path('accounts/', include('allauth.account.urls')),
 
     path('__debug__/', include('debug_toolbar.urls')),
-
 ]
-
-
-

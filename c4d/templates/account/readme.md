@@ -10,3 +10,7 @@ password_change.html – Password change page for logged-in users
 password_change_done.html – Confirmation after password change
 logout.html – Logout confirmation or redirect page
 email_confirm.html – Email verification confirmation page
+
+etc.....
+
+To edit the default templates go inside venv > lib > allauth > templates > account

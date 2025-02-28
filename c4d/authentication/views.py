@@ -1,10 +1,15 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.db import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
-
-from .forms import ProfileUpdateForm
+from django.urls import reverse
+from allauth.account.utils import send_email_confirmation
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
+from django.conf import settings
+from django.contrib.auth.views import redirect_to_login
+from .forms import ProfileUpdateForm, EmailForm
+from .models import Profile
+from django.db import IntegrityError
 
 # from .forms import CustomUserChangeForm, LoginForm
 
@@ -55,30 +60,108 @@ from .forms import ProfileUpdateForm
 #         return render(request, "login.html", {"form": form, "error": "Something went wrong. Please try again."})
 
 
-
-
-@login_required  
-def profile_view(request):
+@login_required
+def onboarding_view(request):
+    # Get or create the profile for the current user
     try:
-        # Try to get the profile for the current user
         profile = request.user.profile
     except ObjectDoesNotExist:
-        return render(request, "profile.html", {
-            "error": "Profile data is missing. Please contact support or register again."
-        })
+        profile = Profile.objects.create(user=request.user)
+        
+    if profile.onboarding_completed:
+        return redirect("profile")
 
     if request.method == "POST":
-        form = ProfileUpdateForm(request.POST, instance=profile)
+        form = ProfileUpdateForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
             form.save()
-
+   
+            profile.onboarding_completed = True
+            profile.save()
             return redirect("profile")
     else:
-        # For GET requests load the form with existing data
         form = ProfileUpdateForm(instance=profile)
 
     context = {
         "form": form,
-        "email": request.user.email,
+        "onboarding": True,  
+        "user": request.user,
     }
-    return render(request, "profile.html", context)
+    return render(request, "users/onboarding.html", context)
+
+@login_required
+def profile_view(request, username=None):
+    if username:
+        profile = get_object_or_404(settings.AUTH_USER_MODEL, username=username).profile
+    else:
+        try:
+            profile = request.user.profile
+        except ObjectDoesNotExist:
+            return redirect_to_login(request.get_full_path())
+
+    # If the user has not finished onboarding, forcing them
+    if not profile.onboarding_completed:
+        return redirect("onboarding")
+
+    return render(request, "users/profile.html", {"profile": profile})
+
+@login_required
+def profile_edit_view(request):
+    form = ProfileUpdateForm(instance=request.user.profile)
+    if request.method == "POST":
+        form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
+        if form.is_valid():
+            form.save()
+            return redirect("profile")
+
+    if request.path == reverse("profile-onboarding"):
+        onboarding = True
+    else:
+        onboarding = False
+
+    return render(request, "users/profile_edit.html", {"form": form, "onboarding": onboarding})
+
+@login_required
+def profile_emailchange(request):
+    if request.htmx:
+        form = EmailForm(instance=request.user)
+        return render(request, "partials/email_form.html", {"form": form})
+
+    if request.method == "POST":
+        form = EmailForm(request.POST, instance=request.user)
+        if form.is_valid():
+            email = form.cleaned_data["email"]
+            if (
+                settings.AUTH_USER_MODEL.objects.filter(email=email)
+                .exclude(id=request.user.id)
+                .exists()
+            ):
+                messages.warning(request, f"{email} is already in use.")
+                return redirect("profile-settings")
+
+            form.save()
+            send_email_confirmation(request, request.user)
+            return redirect("profile-settings")
+        else:
+            messages.warning(request, "Form not valid")
+            return redirect("profile-settings")
+
+    return redirect("home")
+
+@login_required
+def profile_emailverify(request):
+    send_email_confirmation(request, request.user)
+    return redirect("profile-settings")
+
+@login_required
+def profile_delete_view(request):
+    user = request.user
+    if request.method == "POST":
+        logout(request)
+        user.delete()
+        messages.success(request, "Account deleted, what a pity")
+        return redirect("home")
+    return render(request, "users/profile_delete.html")
+
+def home_view(request):
+    return render(request, "home.html")
