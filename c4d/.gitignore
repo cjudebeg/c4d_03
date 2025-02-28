@@ -10,9 +10,9 @@ env/
 venv/
 
 # Ignore environment files
-*.env
-*.env.*
-.env.local
+# *.env
+# *.env.*
+# .env.local
 
 # Ignore logs and database files
 *.log
