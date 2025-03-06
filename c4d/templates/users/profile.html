@@ -4,66 +4,71 @@
 {% block title %}My Profile{% endblock %}
 
 {% block layout %}
-<main class="max-w-4xl mx-auto p-8 bg-white mt-6 shadow">
-  <h2 class="text-2xl font-bold mb-6">Profile</h2>
+<main class="max-w-4xl mx-auto p-8 bg-white mt-6 shadow rounded-lg">
+  <h2 class="text-3xl font-bold mb-6">Profile</h2>
 
   <!-- Personal Info -->
-  <section class="mb-8">
+  <section class="mb-8 border border-gray-200 bg-gray-50 rounded-lg p-4">
     <h3 class="text-xl font-semibold mb-4">Personal Information</h3>
-    <div class="flex flex-col items-center mb-4">
-
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-y-1 gap-x-4 text-sm text-gray-700">
+      
+      <p><strong>First Name:</strong> {{ profile.first_name|default:"Not provided." }}</p>
+      <p><strong>Middle Name:</strong> {{ profile.middle_name|default:"Not provided." }}</p>
+      <p><strong>Last Name:</strong> {{ profile.last_name|default:"Not provided." }}</p>
+      <p><strong>Date of Birth:</strong> {{ profile.date_of_birth|default:"Not provided." }}</p>
+      <p>
+        <strong>Location:</strong>
+        {% if profile.state and profile.suburb %}
+          {{ profile.suburb }}, {{ profile.state }}
+        {% else %}
+          Not provided.
+        {% endif %}
+      </p>
+      <p>
+        <strong>Email:</strong>
+        {% if profile.user.email and profile.user.email|lower != "none" %}
+          {{ profile.user.email }}
+        {% else %}
+          Not provided.
+        {% endif %}
+      </p>
+      <p><strong>Security Clearance:</strong> {{ profile.clearance_level|default:"Not provided." }}</p>
+      <p><strong>Clearance Number:</strong> {{ profile.clearance_no|default:"Not provided." }}</p>
+      <p><strong>Clearance Expiry:</strong> {{ profile.clearance_expiry|default:"Not provided." }}</p>
     </div>
-
-    <p><strong>First Name:</strong> {{ profile.first_name|default:"Not provided." }}</p>
-    <p><strong>Middle Name:</strong> {{ profile.middle_name|default:"Not provided." }}</p>
-    <p><strong>Last Name:</strong> {{ profile.last_name|default:"Not provided." }}</p>
-    <p><strong>Date of Birth:</strong> {{ profile.date_of_birth|default:"Not provided." }}</p>
-    <p><strong>Location:</strong> 
-      {% if profile.state and profile.suburb %}
-        {{ profile.suburb }}, {{ profile.state }}
-      {% else %}
-        Not provided.
-      {% endif %}
-    </p>
-    <p><strong>Email:</strong>
-      {% if profile.user.email and profile.user.email|lower != "none" %}
-        {{ profile.user.email }}
-      {% else %}
-        Not provided.
-      {% endif %}
-    </p>
-    <p><strong>Security Clearance:</strong> {{ profile.clearance_level|default:"Not provided." }}</p>
-    <p><strong>Clearance Number:</strong> {{ profile.clearance_no|default:"Not provided." }}</p>
-    <p><strong>Clearance Expiry:</strong> {{ profile.clearance_expiry|default:"Not provided." }}</p>
   </section>
 
   <!-- Additional Info Section -->
-  <section class="mb-8">
+  <section class="mb-8 border border-gray-200 bg-gray-50 rounded-lg p-4">
     <h3 class="text-xl font-semibold mb-4">Additional Information</h3>
-    <p><strong>Skill Sets:</strong> 
-      {% if profile.skill_sets %}
-        {{ profile.skill_sets }}
-      {% else %}
-        Not provided.
+    <div class="text-sm text-gray-700 space-y-2">
+      <p>
+        <strong>Skill Sets:</strong>
+        {% if profile.skill_sets %}
+          {{ profile.skill_sets }}
+        {% else %}
+          Not provided.
+        {% endif %}
+      </p>
+      <p>
+        <strong>Skill Level:</strong>
+        {% if profile.skill_level %}
+          {{ profile.skill_level }}
+        {% else %}
+          Not provided.
+        {% endif %}
+      </p>
+      {% if profile.info %}
+        <div class="mt-4">
+          <strong>Bio/Info:</strong>
+          <div class="mt-2 hyphens-auto">{{ profile.info|linebreaksbr }}</div>
+        </div>
       {% endif %}
-    </p>
-    <p><strong>Skill Level:</strong> 
-      {% if profile.skill_level %}
-        {{ profile.skill_level }}
-      {% else %}
-        Not provided.
-      {% endif %}
-    </p>
-    {% if profile.info %}
-      <div class="mt-4">
-        <strong>Bio/Info:</strong>
-        <div class="mt-2 hyphens-auto">{{ profile.info|linebreaksbr }}</div>
-      </div>
-    {% endif %}
+    </div>
   </section>
 
   <!-- Account Settings Section -->
-  <section class="mb-8">
+  <section class="mb-8 border border-gray-200 bg-gray-50 rounded-lg p-4">
     <h3 class="text-xl font-semibold mb-4">Account Settings</h3>
     <table class="w-full text-sm text-left text-gray-600">
       <tbody>
@@ -132,13 +137,14 @@
     </table>
   </section>
 
-  <div class="flex gap-4">
-    <br>
+  <div class="mt-6 flex gap-4">
     <a href="{% url 'profile-edit' %}">
-      <button class="bg-blue-500 text-white py-2 px-4">Edit Profile</button>
+      <button class="bg-blue-500 text-white py-2 px-4 rounded">Edit Profile</button>
     </a>
 
-    <a href="{% url 'account_logout' %}" class="bg-gray-500 text-white py-2 px-4">Logout</a>
+    <a href="{% url 'account_logout' %}" class="bg-gray-500 text-white py-2 px-4 rounded">
+      Logout
+    </a>
   </div>
 </main>
 {% endblock %}

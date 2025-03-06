@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-gray-50 text-gray-900;
+  font-family: "Inter", sans-serif;
+}
+
+header {
+  @apply bg-gray-800 text-white py-4 px-6;
+}
+
+a {
+  @apply transition duration-300 ease-in-out;
+}
+a:hover {
+  @apply opacity-75;
+}
+
+.container {
+  @apply mx-auto px-4;
+}
+
+footer {
+  @apply bg-gray-800 text-white p-4 text-center;
+}

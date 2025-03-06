@@ -2,21 +2,56 @@
 <form method="POST" action="{% url 'account_login' %}" hx-target="#content" hx-swap="outerHTML">
   {% csrf_token %}
   {{ form.non_field_errors }}
-  <div class="mb-6" style="padding-bottom: 16px;">
-    <label for="id_login" class="block mb-2">Email:</label>
+
+  <div class="mb-4">
+    <label for="id_login" class="block mb-1 font-semibold">Email:</label>
     {{ form.login }}
+    {% if form.login.errors %}
+      <p class="text-red-500 text-sm mt-1">{{ form.login.errors }}</p>
+    {% endif %}
+    <script>
+      (function() {
+        const emailInput = document.getElementById('id_login');
+        if (emailInput) {
+          emailInput.classList.add(
+            'block','w-full','bg-gray-100','px-4','py-2','mb-2','rounded','border','border-gray-300',
+            'focus:outline-none','focus:ring-2','focus:ring-blue-500','placeholder-gray-500'
+          );
+        }
+      })();
+    </script>
   </div>
-  <div class="mb-6" style="padding-bottom: 10px;">
-    <label for="id_password" class="block mb-2">Password:</label>
+
+  <!-- Password field -->
+  <div class="mb-4">
+    <label for="id_password" class="block mb-1 font-semibold">Password:</label>
     {{ form.password }}
+    {% if form.password.errors %}
+      <p class="text-red-500 text-sm mt-1">{{ form.password.errors }}</p>
+    {% endif %}
+    <script>
+      (function() {
+        const pwdInput = document.getElementById('id_password');
+        if (pwdInput) {
+          pwdInput.classList.add(
+            'block','w-full','bg-gray-100','px-4','py-2','mb-2','rounded','border','border-gray-300',
+            'focus:outline-none','focus:ring-2','focus:ring-blue-500','placeholder-gray-500'
+          );
+        }
+      })();
+    </script>
   </div>
-  <div class="flex gap-6" style="padding-bottom: 10px; padding-top: 5px;">
-    <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded">Sign In</button>
+
+  <div class="flex gap-4 items-center mt-4">
+    <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded">
+      Sign In
+    </button>
     <a href="{% url 'account_signup' %}" hx-target="#content" hx-swap="outerHTML">
       <button type="button" class="bg-green-500 text-white py-2 px-4 rounded">Register</button>
     </a>
   </div>
-  <div class="mt-6">
+
+  <div class="mt-4">
     <a href="{% url 'account_reset_password' %}" class="text-blue-600 hover:underline">Forgot your password?</a>
   </div>
 </form>

@@ -1,11 +1,66 @@
 <h2 class="text-xl font-bold mb-4">Register</h2>
-<form method="POST" href="{% url 'account_signup' %}" hx-target="#content" hx-swap="outerHTML">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <div class="flex gap-4 mt-4">
-        <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded">Register</button>
-        <a href="{% url 'account_logout' %}">
-            <button type="button" class="bg-gray-500 text-white py-2 px-4 rounded">Back to Sign In</button>
-        </a>
+
+<form method="POST" hx-target="#content" hx-swap="outerHTML" x-data="{ showReqs: true }">
+  {% csrf_token %}
+
+  {{ form.as_p }}
+
+  <div class="mb-4">
+    <button
+      type="button"
+      class="text-blue-600 underline text-sm"
+      @click="showReqs = !showReqs"
+    >
+      <span x-text="showReqs ? 'Hide password requirements' : 'Show password requirements'"></span>
+    </button>
+
+    <div 
+      class="mt-2 bg-gray-100 p-4 rounded text-sm text-blue-800"
+      x-show="showReqs"
+      x-transition
+    >
+      <ul class="list-disc pl-6 space-y-1">
+        <li>Your password can’t be too similar to your other personal information.</li>
+        <li>Your password must contain at least 12 characters.</li>
+        <li>Your password can be a maximum of 128 characters.</li>
+        <li>Your password can’t be a commonly used password.</li>
+        <li>Your password can’t be entirely numeric.</li>
+        <li>Your password can contain any character, including Unicode and emojis.</li>
+        <li>Your password cannot contain consecutive spaces; they will be replaced by a single space.</li>
+      </ul>
     </div>
+  </div>
+
+  <div class="flex gap-4 mt-4">
+    <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded">
+      Register
+    </button>
+    <a href="{% url 'account_logout' %}">
+      <button type="button" class="bg-gray-500 text-white py-2 px-4 rounded">
+        Back to Sign In
+      </button>
+    </a>
+  </div>
 </form>
+
+<script>
+
+(function(){
+  const emailField = document.getElementById('id_email');
+  const pwd1Field = document.getElementById('id_password1');
+  const pwd2Field = document.getElementById('id_password2');
+
+  const applyTailwind = (el) => {
+    if (el) {
+      el.classList.add(
+        'block','w-full','bg-gray-100','px-4','py-2','mb-2','rounded','border','border-gray-300',
+        'focus:outline-none','focus:ring-2','focus:ring-blue-500','placeholder-gray-500'
+      );
+    }
+  };
+
+  applyTailwind(emailField);
+  applyTailwind(pwd1Field);
+  applyTailwind(pwd2Field);
+})();
+</script>

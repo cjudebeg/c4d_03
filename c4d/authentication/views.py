@@ -62,7 +62,7 @@ from django.db import IntegrityError
 
 @login_required
 def onboarding_view(request):
-    # Get or create the profile for the current user
+    # Get/create the profile for the current user
     try:
         profile = request.user.profile
     except ObjectDoesNotExist:
@@ -75,16 +75,20 @@ def onboarding_view(request):
         form = ProfileUpdateForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
             form.save()
-   
             profile.onboarding_completed = True
             profile.save()
             return redirect("profile")
+        else:
+            # If the form is invalid: capture any nonfield error and shows it as a message
+            if "__all__" in form.errors:
+                for error_msg in form.errors["__all__"]:
+                    messages.error(request, error_msg)
     else:
         form = ProfileUpdateForm(instance=profile)
 
     context = {
         "form": form,
-        "onboarding": True,  
+        "onboarding": True,
         "user": request.user,
     }
     return render(request, "users/onboarding.html", context)
@@ -99,7 +103,7 @@ def profile_view(request, username=None):
         except ObjectDoesNotExist:
             return redirect_to_login(request.get_full_path())
 
-    # If the user has not finished onboarding, forcing them
+    # If the user has not finished onboarding, force them
     if not profile.onboarding_completed:
         return redirect("onboarding")
 
@@ -107,17 +111,23 @@ def profile_view(request, username=None):
 
 @login_required
 def profile_edit_view(request):
+    if request.path == reverse("profile-onboarding"):
+        onboarding = True
+    else:
+        onboarding = False
+
     form = ProfileUpdateForm(instance=request.user.profile)
+
     if request.method == "POST":
         form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
         if form.is_valid():
             form.save()
             return redirect("profile")
-
-    if request.path == reverse("profile-onboarding"):
-        onboarding = True
-    else:
-        onboarding = False
+        else:
+            # If the form is invalid, capture nonfielderrors and display them via message
+            if "__all__" in form.errors:
+                for error_msg in form.errors["__all__"]:
+                    messages.error(request, error_msg)
 
     return render(request, "users/profile_edit.html", {"form": form, "onboarding": onboarding})
 

@@ -4,8 +4,11 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserChangeForm
 from allauth.account.forms import SignupForm
 from .models import Profile, STATE_CHOICES, CLEARANCE_LEVEL_CHOICES
+import re
+from django.utils.translation import gettext as _
 
 User = get_user_model()
+
 
 class CustomUserSignupForm(SignupForm):
     # Custom signup form with Allauth, inc profile fields and passwords
@@ -77,7 +80,32 @@ class CustomUserSignupForm(SignupForm):
     #     profile.save()  
     #
     #     return user
-    pass
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Override helptext to remove the different from your current password msg (to fix multiple space validator issue)
+        self.fields['password1'].help_text = (
+        )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get("password1")
+        password2 = cleaned_data.get("password2")
+        if password1:
+            new_password = re.sub(r'\s{2,}', ' ', password1)
+            if new_password != password1:
+                cleaned_data["password1"] = new_password
+                cleaned_data["password2"] = new_password
+                self.password_modified = True
+        return cleaned_data
+
+    def save(self, request):
+        user = super().save(request)
+        if getattr(self, "password_modified", False):
+            from django.contrib import messages
+            messages.info(request, _("Your password was modified: consecutive spaces have been replaced with a single space."))
+        return user
+
 
 class CustomUserChangeForm(UserChangeForm):
     # Form for users to update their profile
@@ -120,6 +148,7 @@ class CustomUserChangeForm(UserChangeForm):
     #         profile.suburb = self.cleaned_data.get("suburb", "")
     #         profile.save()
     #     return user
+    
     pass
 
 # Merged Profile Update Form combining fields from ProfileForm and existing ProfileUpdateForm.
@@ -137,7 +166,7 @@ class ProfileUpdateForm(ModelForm):
             "clearance_no",     # CSID number
             "clearance_expiry",
 
-            # Extra fields, profile specific
+            # Extra fields
             "skill_sets",
             "skill_level",
         ]
@@ -146,13 +175,12 @@ class ProfileUpdateForm(ModelForm):
             "date_of_birth": forms.DateInput(attrs={'type': 'date', 'placeholder': 'DD/MM/YYYY'}),
             "clearance_expiry": forms.DateInput(attrs={'type': 'date', 'placeholder': 'Expiry DD/MM/YYYY'}),
 
-            "suburb": forms.TextInput(attrs={"placeholder": "Add suburb"}),
+            "suburb": forms.TextInput(attrs={"placeholder": "Your Suburb"}),
             "state": forms.Select(choices=STATE_CHOICES, attrs={"placeholder": "Add State/Territory"}),
-
 
             "clearance_level": forms.Select(choices=CLEARANCE_LEVEL_CHOICES, attrs={"placeholder": "Add AGVSA clearance level"}),
 
-            "clearance_no": forms.TextInput(attrs={"placeholder": "Add AGVSA clearance number"}),
+            "clearance_no": forms.TextInput(attrs={"placeholder": "Your CSID number"}),
         }
         labels = {
             "date_of_birth": "Date of Birth",
@@ -176,16 +204,27 @@ class ProfileUpdateForm(ModelForm):
 
         self.fields["date_of_birth"].input_formats = ['%d/%m/%Y', '%Y-%m-%d']
 
-
         self.fields["first_name"].widget.attrs.update({"placeholder": "Your First Name"})
-
-        self.fields["middle_name"].widget.attrs.update({"placeholder": "Your Middle Name",})
-
-
+        self.fields["middle_name"].widget.attrs.update({"placeholder": "Your Middle Name"})
         self.fields["last_name"].widget.attrs.update({"placeholder": "Your Last Name"})
-        self.fields["date_of_birth"].widget.attrs.update({"placeholder": " In DD/MM/YYYY format"})
+        self.fields["date_of_birth"].widget.attrs.update({"placeholder": "In DD/MM/YYYY format"})
         self.fields["suburb"].widget.attrs.update({"placeholder": "Your Suburb"})
         self.fields["clearance_no"].widget.attrs.update({"placeholder": "Your CSID number"})
+
+        # Replace the dropdown default "---------" value with placeholder
+        original_state_choices = list(self.fields["state"].choices)
+        self.fields["state"].choices = [("", "Select State/Territory")] + original_state_choices[1:]
+
+        original_clearance_choices = list(self.fields["clearance_level"].choices)
+        self.fields["clearance_level"].choices = [("", "Select Clearance Level")] + original_clearance_choices[1:]
+
+        for field_name, field in self.fields.items():
+            existing_classes = field.widget.attrs.get("class", "")
+            field.widget.attrs["class"] = (
+                existing_classes +
+                " block w-full bg-gray-100 px-2 py-2 mb-4 border border-gray-300 "
+                "focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
+            ).strip()
 
     def clean_clearance_no(self):
         clearance_no = self.cleaned_data.get("clearance_no")
@@ -219,6 +258,7 @@ class ProfileUpdateForm(ModelForm):
                 "or your AGVSA security clearance details (Clearance Level, CSID Number, Expiry Date)."
             )
         return cleaned_data
+
 
 class EmailForm(ModelForm):
     email = forms.EmailField(required=True)

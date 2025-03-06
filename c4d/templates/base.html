@@ -5,13 +5,16 @@
   <meta charset="UTF-8">
   <title>{% block title %}C4D{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <link href="{% static 'css/output.css' %}" rel="stylesheet">
+
   <script src="https://unpkg.com/htmx.org@1.9.2"></script>
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
 <body class="{% block body_class %}{% endblock %}">
   {% include 'includes/messages.html' %}
   {% include 'includes/header.html' %}
+
   {% block layout %}{% endblock %}
   {% block javascript %}{% endblock %}
 </body>

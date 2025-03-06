@@ -11,7 +11,11 @@ environ.Env.read_env()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Static files
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -148,6 +152,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+ACCOUNT_FORMS = {'signup': 'authentication.forms.CustomUserSignupForm'}
 
 # Internationalisation settings
 LANGUAGE_CODE = 'en-us'

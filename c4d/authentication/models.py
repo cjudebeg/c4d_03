@@ -67,7 +67,7 @@ class Profile(models.Model):
     skill_sets = models.TextField(blank=True, null=True)
     skill_level = models.CharField(max_length=100, blank=True, null=True)
 
-    # New field for tracking onboarding
+    # field for tracking onboarding staus
     onboarding_completed = models.BooleanField(default=False)
 
     def __str__(self):

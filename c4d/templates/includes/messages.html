@@ -1,10 +1,23 @@
 {% if messages %}
-<div class="fixed top-4 left-0 right-0 flex justify-center">
-  <div class="bg-blue-500 text-white p-4 rounded-lg shadow-md" x-data="{ show: false }"
-       x-init="show = true; setTimeout(() => show = false, 6000)" x-show="show">
-    {% for message in messages %}
-      <p>{{ message }}</p>
-    {% endfor %}
+<div class="fixed top-4 left-0 right-0 flex justify-center z-50">
+  <div class="max-w-md w-full bg-blue-500 text-white px-3 py-2 text-sm rounded shadow-md flex items-center gap-2"
+       x-data="{ show: true }"
+       x-init="setTimeout(() => show = false, 6000)" 
+       x-show="show"
+       x-transition:enter="transition ease-out duration-300"
+       x-transition:leave="transition ease-in duration-200">
+    <div class="leading-tight">
+      {% for message in messages %}
+        <p>{{ message }}</p>
+      {% endfor %}
+    </div>
+    <!-- X to close msg -->
+    <button 
+      class="ml-auto font-semibold hover:bg-blue-600 px-2 py-1 rounded transition-colors"
+      @click="show = false"
+    >
+      X
+    </button>
   </div>
 </div>
 {% endif %}

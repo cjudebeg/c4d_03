@@ -3,18 +3,44 @@
 
 {% block title %}C4D{% endblock %}
 {% include 'includes/header.html' %}
+
 {% block layout %}
 <div class="max-w-4xl mx-auto p-8">
-  <h1 class="text-3xl font-bold mb-4">Landing page of C4 Defence</h1>
-  <p class="mb-4">
+  <h1 class="text-3xl font-bold mb-6">Landing page of C4 Defence</h1>
+  <p class="mb-6">
     Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
     Proin ultrices dui nec dui sollicitudin accumsan.
     Curabitur et odio quis ante tincidunt sodales eget nec lorem.
   </p>
 
-  <div class="flex gap-4 mt-6">
-    <a href="{% url 'account_login' %}" class="bg-blue-500 text-white px-4 py-2 rounded">Sign In</a>
-    <a href="{% url 'account_signup' %}" class="bg-green-500 text-white px-4 py-2 rounded">Register</a>
+  <!-- Job tiles -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    <div class="bg-white rounded shadow p-4">
+      <h2 class="text-lg font-semibold">Web Developer</h2>
+      <p class="text-sm text-gray-600 mb-2">Location: Melbourne</p>
+      <p class="text-sm text-gray-700">
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+      </p>
+    </div>
+    <div class="bg-white rounded shadow p-4">
+      <h2 class="text-lg font-semibold">Engineer</h2>
+      <p class="text-sm text-gray-600 mb-2">Location: Brisbane</p>
+      <p class="text-sm text-gray-700">
+        Proin ultrices dui nec dui sollicitudin accumsan.
+      </p>
+    </div>
+    <div class="bg-white rounded shadow p-4">
+      <h2 class="text-lg font-semibold">Pilot</h2>
+      <p class="text-sm text-gray-600 mb-2">Location: Sydney</p>
+      <p class="text-sm text-gray-700">
+        Curabitur et odio quis ante tincidunt sodales eget nec lorem.
+      </p>
+    </div>
   </div>
+
+  <!-- <div class="flex gap-4">
+    <a href="{% url 'account_login' %}" class="bg-blue-400 text-white px-4 py-2 rounded">Sign In</a>
+    <a href="{% url 'account_signup' %}" class="bg-green-500 text-white px-4 py-2 rounded">Register</a>
+  </div> -->
 </div>
 {% endblock %}
