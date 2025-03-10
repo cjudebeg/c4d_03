@@ -77,22 +77,21 @@ class CustomUserSignupForm(SignupForm):
     #     profile.agvsa_clearance_number = self.cleaned_data.get("agvsa_clearance_number", "")
     #     profile.security_clearance = self.cleaned_data.get("security_clearance", "None")
     #     profile.suburb = self.cleaned_data.get("suburb", "")
-    #     profile.save()  
+    #     profile.save()
     #
     #     return user
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Override helptext to remove the different from your current password msg (to fix multiple space validator issue)
-        self.fields['password1'].help_text = (
-        )
+        self.fields["password1"].help_text = ()
 
     def clean(self):
         cleaned_data = super().clean()
         password1 = cleaned_data.get("password1")
         password2 = cleaned_data.get("password2")
         if password1:
-            new_password = re.sub(r'\s{2,}', ' ', password1)
+            new_password = re.sub(r"\s{2,}", " ", password1)
             if new_password != password1:
                 cleaned_data["password1"] = new_password
                 cleaned_data["password2"] = new_password
@@ -103,7 +102,13 @@ class CustomUserSignupForm(SignupForm):
         user = super().save(request)
         if getattr(self, "password_modified", False):
             from django.contrib import messages
-            messages.info(request, _("Your password was modified: consecutive spaces have been replaced with a single space."))
+
+            messages.info(
+                request,
+                _(
+                    "Your password was modified: consecutive spaces have been replaced with a single space."
+                ),
+            )
         return user
 
 
@@ -133,7 +138,7 @@ class CustomUserChangeForm(UserChangeForm):
     #     fields = ("email",)
     #
     # def save(self, commit=True):
-    #     
+    #
     #     user = super().save(commit=False)
     #     if commit:
     #         user.save()
@@ -148,38 +153,44 @@ class CustomUserChangeForm(UserChangeForm):
     #         profile.suburb = self.cleaned_data.get("suburb", "")
     #         profile.save()
     #     return user
-    
+
     pass
+
 
 # Merged Profile Update Form combining fields from ProfileForm and existing ProfileUpdateForm.
 class ProfileUpdateForm(ModelForm):
     class Meta:
-        model = Profile 
+        model = Profile
         fields = [
             "first_name",
             "middle_name",
             "last_name",
-            "date_of_birth",    
+            "date_of_birth",
             "state",
             "suburb",
             "clearance_level",
-            "clearance_no",     # CSID number
+            "clearance_no",  # CSID number
             "clearance_expiry",
-
             # Extra fields
             "skill_sets",
             "skill_level",
         ]
 
         widgets = {
-            "date_of_birth": forms.DateInput(attrs={'type': 'date', 'placeholder': 'DD/MM/YYYY'}),
-            "clearance_expiry": forms.DateInput(attrs={'type': 'date', 'placeholder': 'Expiry DD/MM/YYYY'}),
-
+            "date_of_birth": forms.DateInput(
+                attrs={"type": "date", "placeholder": "DD/MM/YYYY"}
+            ),
+            "clearance_expiry": forms.DateInput(
+                attrs={"type": "date", "placeholder": "Expiry DD/MM/YYYY"}
+            ),
             "suburb": forms.TextInput(attrs={"placeholder": "Your Suburb"}),
-            "state": forms.Select(choices=STATE_CHOICES, attrs={"placeholder": "Add State/Territory"}),
-
-            "clearance_level": forms.Select(choices=CLEARANCE_LEVEL_CHOICES, attrs={"placeholder": "Add AGVSA clearance level"}),
-
+            "state": forms.Select(
+                choices=STATE_CHOICES, attrs={"placeholder": "Add State/Territory"}
+            ),
+            "clearance_level": forms.Select(
+                choices=CLEARANCE_LEVEL_CHOICES,
+                attrs={"placeholder": "Add AGVSA clearance level"},
+            ),
             "clearance_no": forms.TextInput(attrs={"placeholder": "Your CSID number"}),
         }
         labels = {
@@ -202,27 +213,39 @@ class ProfileUpdateForm(ModelForm):
         self.fields["last_name"].required = True
         self.fields["clearance_level"].required = True
 
-        self.fields["date_of_birth"].input_formats = ['%d/%m/%Y', '%Y-%m-%d']
+        self.fields["date_of_birth"].input_formats = ["%d/%m/%Y", "%Y-%m-%d"]
 
-        self.fields["first_name"].widget.attrs.update({"placeholder": "Your First Name"})
-        self.fields["middle_name"].widget.attrs.update({"placeholder": "Your Middle Name"})
+        self.fields["first_name"].widget.attrs.update(
+            {"placeholder": "Your First Name"}
+        )
+        self.fields["middle_name"].widget.attrs.update(
+            {"placeholder": "Your Middle Name"}
+        )
         self.fields["last_name"].widget.attrs.update({"placeholder": "Your Last Name"})
-        self.fields["date_of_birth"].widget.attrs.update({"placeholder": "In DD/MM/YYYY format"})
+        self.fields["date_of_birth"].widget.attrs.update(
+            {"placeholder": "In DD/MM/YYYY format"}
+        )
         self.fields["suburb"].widget.attrs.update({"placeholder": "Your Suburb"})
-        self.fields["clearance_no"].widget.attrs.update({"placeholder": "Your CSID number"})
+        self.fields["clearance_no"].widget.attrs.update(
+            {"placeholder": "Your CSID number"}
+        )
 
         # Replace the dropdown default "---------" value with placeholder
         original_state_choices = list(self.fields["state"].choices)
-        self.fields["state"].choices = [("", "Select State/Territory")] + original_state_choices[1:]
+        self.fields["state"].choices = [
+            ("", "Select State/Territory")
+        ] + original_state_choices[1:]
 
         original_clearance_choices = list(self.fields["clearance_level"].choices)
-        self.fields["clearance_level"].choices = [("", "Select Clearance Level")] + original_clearance_choices[1:]
+        self.fields["clearance_level"].choices = [
+            ("", "Select Clearance Level")
+        ] + original_clearance_choices[1:]
 
         for field_name, field in self.fields.items():
             existing_classes = field.widget.attrs.get("class", "")
             field.widget.attrs["class"] = (
-                existing_classes +
-                " block w-full bg-gray-100 px-2 py-2 mb-4 border border-gray-300 "
+                existing_classes
+                + " block w-full bg-gray-100 px-2 py-2 mb-4 border border-gray-300 "
                 "focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
             ).strip()
 
@@ -233,10 +256,14 @@ class ProfileUpdateForm(ModelForm):
                 clearance_no = "CS" + clearance_no
             numeric_part = clearance_no[2:]
             if not numeric_part.isdigit():
-                raise forms.ValidationError("The CSID number must contain only digits after 'CS'.")
+                raise forms.ValidationError(
+                    "The CSID number must contain only digits after 'CS'."
+                )
             # Ensure the numeric part is between 5 and 20 digits.
             if not (5 <= len(numeric_part) <= 20):
-                raise forms.ValidationError("The numeric part must be between 5 and 20 digits.")
+                raise forms.ValidationError(
+                    "The numeric part must be between 5 and 20 digits."
+                )
         return clearance_no
 
     def clean(self):
