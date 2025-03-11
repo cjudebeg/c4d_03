@@ -3,7 +3,6 @@ import os
 import socket
 import environ
 
-
 env = environ.Env()
 environ.Env.read_env()
 
@@ -70,8 +69,7 @@ MIDDLEWARE = [
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
-# Configure INTERNAL_IPS for Docker:
-# This snippet gets the container's IP addresses and converts them to allow the host.
+# Configure INTERNAL_IPS for Docker 
 hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
 INTERNAL_IPS = [ip[:-1] + "1" for ip in ips] + ["127.0.0.1"]
 
@@ -95,27 +93,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'a_core.wsgi.application'
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',    
-#         'NAME': 'c4d_db_it_3',                        
-#         'USER': 'postgres',                           
-#         'PASSWORD': 'postgres',
-#         'HOST': 'db',  # Docker service name
-#         'PORT': '5432',                               
-#     }
-# }
-
-
 # Database configuration PostgreSQL
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',    
-        'NAME': os.environ.get('DATABASE_NAME'),                        
-        'USER': os.environ.get('DATABASE_USER'),                          
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DATABASE_NAME'),
+        'USER': os.environ.get('DATABASE_USER'),
         'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
-        'HOST': os.environ.get('DATABASE_HOST'),  # Docker service name
-        'PORT': os.environ.get('DATABASE_PORT'),                              
+        'HOST': os.environ.get('DATABASE_HOST'),
+        'PORT': os.environ.get('DATABASE_PORT'),
     }
 }
 
@@ -141,7 +127,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
 
-    {'NAME': 'authentication.validators.NewPasswordNotSameAsOldValidator',    },  # New Password Not Same As Old Validator when it is reset
+    {'NAME': 'authentication.validators.NewPasswordNotSameAsOldValidator',},  # New Password Not Same As Old Validator
 
     {
         'NAME': 'authentication.validators.UnicodePasswordValidator',
@@ -172,12 +158,12 @@ ACCOUNT_SIGNUP_REDIRECT_URL = "/"
 LOGIN_REDIRECT_URL = "profile"
 ACCOUNT_LOGOUT_REDIRECT_URL = "account_login"
 
-# Email backend for development (prints emails to console)
+# Email backend for development 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+DEFAULT_FROM_EMAIL = "no-reply@example.com"
 
 # Authentication backends used by Django Allauth
 AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
-
