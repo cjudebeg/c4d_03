@@ -14,17 +14,17 @@ def generate_password(length, char="a"):
     return char * length
 
 
-def test_with_authenticated_client(client, django_user_model):
-    email = "a@a.com"
-    password = "bar"
-    user = django_user_model.objects.create_user(email=email, password=password)
-    # Use this:
-    # client.force_login(user)
-    # Or this:
-    client.login(email=email, password=password)
-    response = client.get(reverse("profile"))
-    # response = client.get("auth/profile/")
-    assert response.status_code == 302
+# def test_with_authenticated_client(client, django_user_model):
+#     email = "a@a.com"
+#     password = "bar"
+#     user = django_user_model.objects.create_user(email=email, password=password)
+#     # Use this:
+#     # client.force_login(user)
+#     # Or this:
+#     client.login(email=email, password=password)
+#     response = client.get(reverse("profile"))
+#     # response = client.get("auth/profile/")
+#     assert response.status_code == 302
 
 
 # @pytest.mark.django_db
@@ -62,21 +62,21 @@ def test_with_authenticated_client(client, django_user_model):
 #     assert user.check_password(password)
 
 
-@pytest.mark.django_db
-def test_password_rejects_over_128_chars():
-    """
-    Verify that a password longer than 128 characters is rejected.
-    """
-    password = ""
-    invalid_password = generate_password(129)
-    if password == invalid_password:
-        raise ValidationError("Password is over 128 characters.")
-    user = User.objects.create_user(
-        email="test33@example.com", password=invalid_password
-    )
-    user.set_password(invalid_password)
-    user.save()
-    assert user.check_password(invalid_password)
+# @pytest.mark.django_db
+# def test_password_rejects_over_128_chars():
+#     """
+#     Verify that a password longer than 128 characters is rejected.
+#     """
+#     password = ""
+#     invalid_password = generate_password(129)
+#     if password == invalid_password:
+#         raise ValidationError("Password is over 128 characters.")
+#     user = User.objects.create_user(
+#         email="test33@example.com", password=invalid_password
+#     )
+#     user.set_password(invalid_password)
+#     user.save()
+#     assert user.check_password(invalid_password)
 
 
 @pytest.mark.django_db
@@ -210,7 +210,7 @@ def test_password_change_requires_current_and_new_password():
         ("exact_length", False),  # Exactly 12 characters (assuming min_length=12)
     ],
 )
-def test_minimum_length_validator(password, should_raise):
+def test_minimum_password_length_validator(password, should_raise):
     validator = MinimumLengthValidator(min_length=12)  # Adjust min_length if needed
 
     if should_raise:
@@ -232,7 +232,7 @@ def test_minimum_length_validator(password, should_raise):
 
 
 @pytest.mark.django_db
-def test_password_length_validation():
+def test_maximum_password_length_validation():
     """
     Test that MaximumLengthValidator correctly validates passwords based on length.
     """
