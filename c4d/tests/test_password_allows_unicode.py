@@ -9,11 +9,6 @@ from django.urls import reverse
 User = get_user_model()
 
 
-def generate_password(length, char="a"):
-    """Helper to generate a simple password of a given length."""
-    return char * length
-
-
 @pytest.mark.django_db
 def test_password_allows_unicode():
     """
@@ -24,3 +19,6 @@ def test_password_allows_unicode():
     user = User.objects.create_user(email="test5@example.com", password=password)
     user.full_clean()
     assert user.check_password(password)
+
+    # if user.check_password(password) == True:
+    #     # print(" UNICODE ALLOWED ")

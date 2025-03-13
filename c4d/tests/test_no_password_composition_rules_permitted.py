@@ -2,24 +2,16 @@ import pytest
 import string
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.utils.translation import ngettext
 from authentication.validators import *
-import pytest
 from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
+
 
 User = get_user_model()
-
-
-def generate_password(length, char="a"):
-    """Helper to generate a simple password of a given length."""
-    return char * length
 
 
 @pytest.mark.django_db
 def test_no_password_composition_rules_permitted():
 
-    User = get_user_model()
     min_valid_length = 12
 
     # There should be no requirement for upper or lower case or numbers or special characters

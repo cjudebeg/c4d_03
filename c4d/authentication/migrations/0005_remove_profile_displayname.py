@@ -6,12 +6,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('authentication', '0004_profile_skill_level_profile_skill_sets'),
+        ("authentication", "0004_profile_skill_level_profile_skill_sets"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='profile',
-            name='displayname',
+            model_name="profile",
+            name="displayname",
         ),
     ]

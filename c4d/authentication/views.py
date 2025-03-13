@@ -21,16 +21,16 @@ from django.db import IntegrityError
 #                 form.save()
 #                 return redirect("login")
 #             else:
-#                 print("Registration form errors:", form.errors)  
+#                 print("Registration form errors:", form.errors)
 #         else:
 #             form = CustomUserChangeForm()
 #         return render(request, "register.html", {"form": form})
-    
+
 #     except IntegrityError as e:  # Handles duplicate email issues
 #         print(f"Database error: {e}")
 #         form.add_error("email", "This email is already registered.")
 #         return render(request, "register.html", {"form": form})
-    
+
 #     except Exception as e:  # Catch-all for unexpected errors
 #         print(f"Unexpected error in register_view: {e}")
 #         return render(request, "register.html", {"form": form, "error": "Something went wrong. Please try again."})
@@ -54,7 +54,7 @@ from django.db import IntegrityError
 #         else:
 #             form = LoginForm()
 #         return render(request, "login.html", {"form": form})
-    
+
 #     except Exception as e:
 #         print(f"Unexpected error in login_view: {e}")
 #         return render(request, "login.html", {"form": form, "error": "Something went wrong. Please try again."})
@@ -67,7 +67,7 @@ def onboarding_view(request):
         profile = request.user.profile
     except ObjectDoesNotExist:
         profile = Profile.objects.create(user=request.user)
-        
+
     if profile.onboarding_completed:
         return redirect("profile")
 
@@ -93,6 +93,7 @@ def onboarding_view(request):
     }
     return render(request, "users/onboarding.html", context)
 
+
 @login_required
 def profile_view(request, username=None):
     if username:
@@ -109,6 +110,7 @@ def profile_view(request, username=None):
 
     return render(request, "users/profile.html", {"profile": profile})
 
+
 @login_required
 def profile_edit_view(request):
     if request.path == reverse("profile-onboarding"):
@@ -119,7 +121,9 @@ def profile_edit_view(request):
     form = ProfileUpdateForm(instance=request.user.profile)
 
     if request.method == "POST":
-        form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
+        form = ProfileUpdateForm(
+            request.POST, request.FILES, instance=request.user.profile
+        )
         if form.is_valid():
             form.save()
             return redirect("profile")
@@ -129,7 +133,10 @@ def profile_edit_view(request):
                 for error_msg in form.errors["__all__"]:
                     messages.error(request, error_msg)
 
-    return render(request, "users/profile_edit.html", {"form": form, "onboarding": onboarding})
+    return render(
+        request, "users/profile_edit.html", {"form": form, "onboarding": onboarding}
+    )
+
 
 @login_required
 def profile_emailchange(request):
@@ -158,10 +165,12 @@ def profile_emailchange(request):
 
     return redirect("home")
 
+
 @login_required
 def profile_emailverify(request):
     send_email_confirmation(request, request.user)
     return redirect("profile-settings")
+
 
 @login_required
 def profile_delete_view(request):
@@ -172,6 +181,7 @@ def profile_delete_view(request):
         messages.success(request, "Account deleted, what a pity")
         return redirect("home")
     return render(request, "users/profile_delete.html")
+
 
 def home_view(request):
     return render(request, "home.html")

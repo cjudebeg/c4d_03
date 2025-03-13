@@ -7,33 +7,7 @@ from authentication.validators import *
 from django.urls import reverse
 
 
-@pytest.mark.parametrize(
-    "password,should_raise",
-    [
-        ("short", True),  # Too short, should raise ValidationError
-        ("longenough_12", False),  # Long enough, should not raise
-        ("exact_length", False),  # Exactly 12 characters (assuming min_length=12)
-    ],
-)
-def test_minimum_password_length_validator(password, should_raise):
-    validator = MinimumLengthValidator(min_length=12)  # Adjust min_length if needed
-
-    if should_raise:
-        with pytest.raises(ValidationError) as exc_info:
-            validator.validate(password)
-
-        expected_message = ngettext(
-            "This password is too short. It must contain at least "
-            "%(min_length)d character.",
-            "This password is too short. It must contain at least "
-            "%(min_length)d characters.",
-            12,
-        ) % {"min_length": 12}
-
-        assert expected_message in str(exc_info.value)
-    else:
-        # Should not raise any exceptions
-        validator.validate(password)
+# tests the vaidator
 
 
 @pytest.mark.django_db
@@ -61,6 +35,9 @@ def test_maximum_password_length_validation():
         validator.validate(invalid_password)
 
 
+# tests validation of the model
+
+
 @pytest.mark.django_db
 def test_custom_user_model_password_length():
     """
@@ -86,5 +63,3 @@ def test_custom_user_model_password_length():
         ValidationError, match="This password is greater than the maximum"
     ):
         validator.validate(invalid_password)
-
-

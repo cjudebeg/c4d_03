@@ -9,11 +9,6 @@ from django.urls import reverse
 User = get_user_model()
 
 
-def generate_password(length, char="a"):
-    """Helper to generate a simple password of a given length."""
-    return char * length
-
-
 @pytest.mark.django_db
 def test_user_can_change_password():
     """

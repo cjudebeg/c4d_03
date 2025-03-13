@@ -1,21 +1,14 @@
 import pytest
 import string
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
-from django.utils.translation import ngettext
 from authentication.validators import *
-from django.urls import reverse
+from django.contrib.auth.hashers import check_password
 
 User = get_user_model()
 
 
-def generate_password(length, char="a"):
-    """Helper to generate a simple password of a given length."""
-    return char * length
-
-
 @pytest.mark.django_db
-def test_password_no_truncation_and_no_space_normalization():
+def test_password_no_space_normalization():
     """
     Check that the password is not truncated when set.
 
@@ -36,3 +29,14 @@ def test_password_no_truncation_and_no_space_normalization():
     normalized_password = "This is a valid password with spaces"
     assert not user.check_password(normalized_password)
     assert user.check_password(raw_password)
+
+
+@pytest.mark.django_db
+def test_password_retains_consecutive_spaces():
+    password_with_spaces = "password    with   multiple     spaces"
+    password_without_spaces = "password with multiple spaces"
+    user = User.objects.create_user(
+        email="test@example.com", password=password_with_spaces
+    )
+    assert check_password(password_with_spaces, user.password) is True
+    assert check_password(password_without_spaces, user.password) is False

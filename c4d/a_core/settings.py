@@ -142,9 +142,6 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "authentication.validators.UnicodePasswordValidator",
     },
-    # {
-    #     "NAME": "authentication.validators.OneSpaceValidator",
-    # },
 ]
 
 ACCOUNT_FORMS = {"signup": "authentication.forms.CustomUserSignupForm"}
@@ -166,6 +163,7 @@ ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_SIGNUP_REDIRECT_URL = "/"
 LOGIN_REDIRECT_URL = "profile"
 ACCOUNT_LOGOUT_REDIRECT_URL = "account_login"
+# ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 
 # Email backend for development (prints emails to console)
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
