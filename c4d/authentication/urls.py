@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import onboarding_view, profile_view, profile_edit_view, profile_emailchange, profile_emailverify, profile_delete_view
+from .views import onboarding_view, profile_view, profile_edit_view, profile_emailchange, profile_emailverify, profile_delete_view, mfa_setup, mfa_verify, mfa_resend
 #from .views import register_view, login_view
 
 urlpatterns = [
@@ -14,5 +14,16 @@ urlpatterns = [
     path("emailchange/", profile_emailchange, name="profile-emailchange"),
     path("emailverify/", profile_emailverify, name="profile-emailverify"),
     path("delete/", profile_delete_view, name="profile-delete"),
+
+    path("mfa/setup/", mfa_setup, name="mfa_setup"),
+    path("mfa/verify/", mfa_verify, name="mfa_verify"),
+    path("mfa/resend/", mfa_resend, name="mfa_resend"),
 ]
+
+
+
+
+
+
+
 

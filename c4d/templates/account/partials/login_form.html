@@ -14,7 +14,7 @@
         const emailInput = document.getElementById('id_login');
         if (emailInput) {
           emailInput.classList.add(
-            'block','w-full','bg-gray-100','px-4','py-2','mb-2','rounded','border','border-gray-300',
+            'block','w-full','bg-gray-100','px-4','py-2','mb-2','border','border-gray-300',
             'focus:outline-none','focus:ring-2','focus:ring-blue-500','placeholder-gray-500'
           );
         }
@@ -34,7 +34,7 @@
         const pwdInput = document.getElementById('id_password');
         if (pwdInput) {
           pwdInput.classList.add(
-            'block','w-full','bg-gray-100','px-4','py-2','mb-2','rounded','border','border-gray-300',
+            'block','w-full','bg-gray-100','px-4','py-2','mb-2','border','border-gray-300',
             'focus:outline-none','focus:ring-2','focus:ring-blue-500','placeholder-gray-500'
           );
         }
@@ -43,11 +43,11 @@
   </div>
 
   <div class="flex gap-4 items-center mt-4">
-    <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded">
+    <button type="submit" class="bg-blue-500 text-white py-2 px-4">
       Sign In
     </button>
     <a href="{% url 'account_signup' %}" hx-target="#content" hx-swap="outerHTML">
-      <button type="button" class="bg-green-500 text-white py-2 px-4 rounded">Register</button>
+      <button type="button" class="bg-green-500 text-white py-2 px-4">Register</button>
     </a>
   </div>
 

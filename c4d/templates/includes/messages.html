@@ -1,6 +1,6 @@
 {% if messages %}
 <div class="fixed top-4 left-0 right-0 flex justify-center z-50">
-  <div class="max-w-md w-full bg-blue-500 text-white px-3 py-2 text-sm rounded shadow-md flex items-center gap-2"
+  <div class="max-w-md w-full bg-blue-500 text-white px-3 py-2 text-sm shadow-md flex items-center gap-2"
        x-data="{ show: true }"
        x-init="setTimeout(() => show = false, 6000)" 
        x-show="show"
@@ -13,10 +13,10 @@
     </div>
     <!-- X to close msg -->
     <button 
-      class="ml-auto font-semibold hover:bg-blue-600 px-2 py-1 rounded transition-colors"
+      class="ml-auto font-semibold hover:bg-blue-600 px-2 py-1 transition-colors"
       @click="show = false"
     >
-      X
+    ✕
     </button>
   </div>
 </div>

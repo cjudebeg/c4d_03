@@ -4,11 +4,11 @@
 {% block title %}My Profile{% endblock %}
 
 {% block layout %}
-<main class="max-w-4xl mx-auto p-8 bg-white mt-6 shadow rounded-lg">
+<main class="max-w-4xl mx-auto p-8 bg-white mt-6 shadow">
   <h2 class="text-3xl font-bold mb-6">Profile</h2>
 
   <!-- Personal Info -->
-  <section class="mb-8 border border-gray-200 bg-gray-50 rounded-lg p-4">
+  <section class="mb-8 border border-gray-200 bg-gray-50 p-4">
     <h3 class="text-xl font-semibold mb-4">Personal Information</h3>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-y-1 gap-x-4 text-sm text-gray-700">
       
@@ -39,7 +39,7 @@
   </section>
 
   <!-- Additional Info Section -->
-  <section class="mb-8 border border-gray-200 bg-gray-50 rounded-lg p-4">
+  <section class="mb-8 border border-gray-200 bg-gray-50 p-4">
     <h3 class="text-xl font-semibold mb-4">Additional Information</h3>
     <div class="text-sm text-gray-700 space-y-2">
       <p>
@@ -68,7 +68,7 @@
   </section>
 
   <!-- Account Settings Section -->
-  <section class="mb-8 border border-gray-200 bg-gray-50 rounded-lg p-4">
+  <section class="mb-8 border border-gray-200 bg-gray-50 p-4">
     <h3 class="text-xl font-semibold mb-4">Account Settings</h3>
     <table class="w-full text-sm text-left text-gray-600">
       <tbody>
@@ -139,10 +139,10 @@
 
   <div class="mt-6 flex gap-4">
     <a href="{% url 'profile-edit' %}">
-      <button class="bg-blue-500 text-white py-2 px-4 rounded">Edit Profile</button>
+      <button class="bg-blue-500 text-white py-2 px-4">Edit Profile</button>
     </a>
 
-    <a href="{% url 'account_logout' %}" class="bg-gray-500 text-white py-2 px-4 rounded">
+    <a href="{% url 'account_logout' %}" class="bg-gray-500 text-white py-2 px-4">
       Logout
     </a>
   </div>

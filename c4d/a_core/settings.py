@@ -3,7 +3,6 @@ import os
 import socket
 import environ
 
-
 env = environ.Env()
 environ.Env.read_env()
 
@@ -64,8 +63,7 @@ MIDDLEWARE = [
     "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
-# Configure INTERNAL_IPS for Docker:
-# This snippet gets the container's IP addresses and converts them to allow the host.
+# Configure INTERNAL_IPS for Docker 
 hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
 INTERNAL_IPS = [ip[:-1] + "1" for ip in ips] + ["127.0.0.1"]
 
@@ -165,8 +163,9 @@ LOGIN_REDIRECT_URL = "profile"
 ACCOUNT_LOGOUT_REDIRECT_URL = "account_login"
 # ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 
-# Email backend for development (prints emails to console)
+# Email backend for development 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+DEFAULT_FROM_EMAIL = "no-reply@example.com"
 
 # Authentication backends used by Django Allauth
 AUTHENTICATION_BACKENDS = [
