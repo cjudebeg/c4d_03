@@ -17,8 +17,8 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_HOST: db
       DJANGO_SETTINGS_MODULE: a_core.settings
-    networks:
-      - c4d_network
+    # networks:
+    #   - c4d_network
 
   db:
     image: postgres:16
@@ -26,14 +26,25 @@ services:
       POSTGRES_DB: c4d_db_it_3
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+    
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
     # Exposes the Postgres port
     ports:
-      - "5430:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - c4d_network
+      - "5432:5432"
+    # networks:
+    #   - c4d_network
+  pgadmin:
+    container_name: pgadmin4
+    image: dpage/pgadmin4
+    restart: always
+    environment: 
+      PGADMIN_DEFAULT_EMAIL: root@root.com
+      PGADMIN_DEFAULT_PASSWORD: root 
+      # PGADMIN_LISTEN_PORT = 80
+    ports:
+      - "5050:80"
 
 networks:
   c4d_network:

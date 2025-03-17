@@ -1,6 +1,8 @@
 from django import forms
 from django.forms import ModelForm
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import UserChangeForm
 from allauth.account.forms import SignupForm
 from .models import Profile, STATE_CHOICES, CLEARANCE_LEVEL_CHOICES
@@ -11,105 +13,123 @@ User = get_user_model()
 
 
 class CustomUserSignupForm(SignupForm):
-    # Custom signup form with Allauth, inc profile fields and passwords
-
-    # first_name = forms.CharField(required=True)
-    # middle_name = forms.CharField(required=False)
-    # last_name = forms.CharField(required=True)
-    # date_of_birth = forms.DateField(required=True, widget=forms.TextInput(attrs={'type': 'date'}))
-    # agvsa_clearance_number = forms.CharField(label="AGVSA clearance number", required=False)
-    # security_clearance = forms.ChoiceField(
-    #     choices=[
-    #         ('None', 'None'),
-    #         ('Pending', 'Pending'),
-    #         ('Baseline', 'Baseline'),
-    #         ('Negative Vetting 1', 'Negative Vetting 1'),
-    #         ('Negative Vetting 2', 'Negative Vetting 2'),
-    #         ('Positive Vetting', 'Positive Vetting')
-    #     ],
-    #     required=True
-    # )
-    # suburb = forms.CharField(required=False)
-    #
-    # password1 = forms.CharField(
-    #     label="Password",
-    #     widget=forms.PasswordInput(attrs={"placeholder": "Enter password"}),
-    #     required=True,
-    # )
-    # password2 = forms.CharField(
-    #     label="Confirm Password",
-    #     widget=forms.PasswordInput(attrs={"placeholder": "Confirm password"}),
-    #     required=True,
-    # )
-    #
-    # def clean_email(self):
-    #     """Ensure email is unique."""
-    #     email = self.cleaned_data.get("email")
-    #     if User.objects.filter(email=email).exists():
-    #         raise forms.ValidationError("This email is already registered.")
-    #     return email
-    #
-    # def clean(self):
-    #     Ensure passwords match
-    #
-    #     cleaned_data = super().clean()
-    #     password1 = cleaned_data.get("password1")
-    #     password2 = cleaned_data.get("password2")
-    #
-    #     if password1 and password2 and password1 != password2:
-    #         raise forms.ValidationError("Passwords do not match.")
-    #
-    #     return cleaned_data
-    #
-    # def save(self, request):
-    #
-    #     save user with password and profile fields.
-    #
-    #     user = super().save(request)  # Save user using Allauth
-    #     user.set_password(self.cleaned_data["password1"])  # Hashing pwd
-    #     user.save()
-    #
-    #     profile = user.profile  =
-    #     profile.first_name = self.cleaned_data.get("first_name", "")
-    #     profile.middle_name = self.cleaned_data.get("middle_name", "")
-    #     profile.last_name = self.cleaned_data.get("last_name", "")
-    #     profile.date_of_birth = self.cleaned_data.get("date_of_birth", None)
-    #     profile.agvsa_clearance_number = self.cleaned_data.get("agvsa_clearance_number", "")
-    #     profile.security_clearance = self.cleaned_data.get("security_clearance", "None")
-    #     profile.suburb = self.cleaned_data.get("suburb", "")
-    #     profile.save()
-    #
-    #     return user
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Override helptext to remove the different from your current password msg (to fix multiple space validator issue)
-        self.fields["password1"].help_text = ()
+        # Remove help text if desired.
+        self.fields["password1"].help_text = None
 
     def clean(self):
         cleaned_data = super().clean()
         password1 = cleaned_data.get("password1")
-        password2 = cleaned_data.get("password2")
         if password1:
-            new_password = re.sub(r"\s{2,}", " ", password1)
-            if new_password != password1:
-                cleaned_data["password1"] = new_password
-                cleaned_data["password2"] = new_password
-                self.password_modified = True
+            try:
+                # Validate the password against all validators in AUTH_PASSWORD_VALIDATORS.
+                validate_password(password1)
+            except ValidationError as e:
+                self.add_error("password1", e)
         return cleaned_data
 
-    def save(self, request):
-        user = super().save(request)
-        if getattr(self, "password_modified", False):
-            from django.contrib import messages
 
-            messages.info(
-                request,
-                _(
-                    "Your password was modified: consecutive spaces have been replaced with a single space."
-                ),
-            )
-        return user
+# class CustomUserSignupForm(SignupForm):
+# Custom signup form with Allauth, inc profile fields and passwords
+
+# first_name = forms.CharField(required=True)
+# middle_name = forms.CharField(required=False)
+# last_name = forms.CharField(required=True)
+# date_of_birth = forms.DateField(required=True, widget=forms.TextInput(attrs={'type': 'date'}))
+# agvsa_clearance_number = forms.CharField(label="AGVSA clearance number", required=False)
+# security_clearance = forms.ChoiceField(
+#     choices=[
+#         ('None', 'None'),
+#         ('Pending', 'Pending'),
+#         ('Baseline', 'Baseline'),
+#         ('Negative Vetting 1', 'Negative Vetting 1'),
+#         ('Negative Vetting 2', 'Negative Vetting 2'),
+#         ('Positive Vetting', 'Positive Vetting')
+#     ],
+#     required=True
+# )
+# suburb = forms.CharField(required=False)
+#
+# password1 = forms.CharField(
+#     label="Password",
+#     widget=forms.PasswordInput(attrs={"placeholder": "Enter password"}),
+#     required=True,
+# )
+# password2 = forms.CharField(
+#     label="Confirm Password",
+#     widget=forms.PasswordInput(attrs={"placeholder": "Confirm password"}),
+#     required=True,
+# )
+#
+# def clean_email(self):
+#     """Ensure email is unique."""
+#     email = self.cleaned_data.get("email")
+#     if User.objects.filter(email=email).exists():
+#         raise forms.ValidationError("This email is already registered.")
+#     return email
+#
+# def clean(self):
+#     Ensure passwords match
+#
+#     cleaned_data = super().clean()
+#     password1 = cleaned_data.get("password1")
+#     password2 = cleaned_data.get("password2")
+#
+#     if password1 and password2 and password1 != password2:
+#         raise forms.ValidationError("Passwords do not match.")
+#
+#     return cleaned_data
+#
+# def save(self, request):
+#
+#     save user with password and profile fields.
+#
+#     user = super().save(request)  # Save user using Allauth
+#     user.set_password(self.cleaned_data["password1"])  # Hashing pwd
+#     user.save()
+#
+#     profile = user.profile  =
+#     profile.first_name = self.cleaned_data.get("first_name", "")
+#     profile.middle_name = self.cleaned_data.get("middle_name", "")
+#     profile.last_name = self.cleaned_data.get("last_name", "")
+#     profile.date_of_birth = self.cleaned_data.get("date_of_birth", None)
+#     profile.agvsa_clearance_number = self.cleaned_data.get("agvsa_clearance_number", "")
+#     profile.security_clearance = self.cleaned_data.get("security_clearance", "None")
+#     profile.suburb = self.cleaned_data.get("suburb", "")
+#     profile.save()
+#
+#     return user
+
+# def __init__(self, *args, **kwargs):
+#     super().__init__(*args, **kwargs)
+#     # Override helptext to remove the different from your current password msg (to fix multiple space validator issue)
+#     self.fields["password1"].help_text = ()
+
+# def clean(self):
+#     cleaned_data = super().clean()
+#     password1 = cleaned_data.get("password1")
+#     password2 = cleaned_data.get("password2")
+#     if password1:
+#         new_password = re.sub(r"\s{2,}", " ", password1)
+#         if new_password != password1:
+#             cleaned_data["password1"] = new_password
+#             cleaned_data["password2"] = new_password
+#             self.password_modified = True
+#     return cleaned_data
+
+# def save(self, request):
+#     user = super().save(request)
+#     if getattr(self, "password_modified", False):
+#         from django.contrib import messages
+
+#         messages.info(
+#             request,
+#             _(
+#                 "Your password was modified: consecutive spaces have been replaced with a single space."
+#             ),
+#         )
+#     return user
 
 
 class CustomUserChangeForm(UserChangeForm):

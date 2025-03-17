@@ -11,10 +11,12 @@ User = get_user_model()
 
 class TestProfilePage(TestCase):
     def test_profile_view_for_authenticated_users(self):
-        User.objects.create_user(email="admin@admin.com", password="password123456")
+        User.objects.create_user(email="admin@admin.com", password="password")
 
-        self.client.login(email="admin@admin.com", password="password123456")
+        self.client.login(email="admin@admin.com", password="password")
         response = self.client.get(reverse("profile"))
         self.assertEqual(response.status_code, 302)
-        first = User.objects.first()
-        print(first)
+        # self.save()
+        all = User.objects.all()
+        # print(User.objects.id)
+        print(all)
