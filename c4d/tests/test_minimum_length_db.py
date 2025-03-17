@@ -4,6 +4,9 @@ from django.core.exceptions import ValidationError
 from django.test.client import RequestFactory
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.sessions.middleware import SessionMiddleware
+from authentication.forms import (
+    CustomUserSignupForm,
+)  # Adjust the import path as necessary
 
 # Import the allauth signup form
 from allauth.account.forms import SignupForm
@@ -45,10 +48,27 @@ def test_signup_form_with_invalid_password():
         "password1": "shortpwd",  # too short
         "password2": "shortpwd",
     }
-    form = SignupForm(data=form_data)
+    form = CustomUserSignupForm(data=form_data)
     assert not form.is_valid()
     # Check that an error on the password field is reported
     assert "password1" in form.errors
+
+
+@pytest.mark.django_db
+def test_signup_form_with_valid_password():
+    """
+    Test that the allauth SignupForm rejects a password that meets the
+    minimum length requirement.
+    """
+    form_data = {
+        "email": "user@example.com",
+        "password1": "exactpasswrd",  # exact length
+        "password2": "exactpasswrd",
+    }
+    form = CustomUserSignupForm(data=form_data)
+    assert form.is_valid()
+    # Check that no error on the password field is reported
+    assert not "password1" in form.errors
 
 
 # @pytest.mark.django_db
@@ -86,7 +106,7 @@ def test_signup_form_with_valid_password_and_user_creation():
         "password1": "averysecurepassword",  # valid password (>=12 characters)
         "password2": "averysecurepassword",
     }
-    form = SignupForm(data=form_data)
+    form = CustomUserSignupForm(data=form_data)
     assert form.is_valid(), form.errors
 
     # Create a dummy request with a session using RequestFactory and SessionMiddleware
