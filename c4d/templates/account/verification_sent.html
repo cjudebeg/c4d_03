@@ -1,0 +1,10 @@
+{% extends "layouts/box.html" %}
+{% load i18n %}
+{% load allauth %}
+{% block content %}
+    <h1 class="text-2xl font-bold mb-4">{% trans "Verify Your Email Address" %}</h1>
+    <p class="mb-4 text-gray-700">
+        {% blocktrans %}We have sent an email to you for verification. Follow the link provided to finalise your signup process. If you do not see the verification email in your main inbox, please check your spam folder.{% endblocktrans %}
+    </p>
+
+{% endblock content %}

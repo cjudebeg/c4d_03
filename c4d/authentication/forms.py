@@ -86,6 +86,10 @@ class CustomUserSignupForm(SignupForm):
         # Override helptext to remove the different from your current password msg (to fix multiple space validator issue)
         self.fields['password1'].help_text = (
         )
+        # Ensure password and email fields have the correct id attributes
+        self.fields['password1'].widget.attrs.update({"id": "id_password1"})
+        self.fields['password2'].widget.attrs.update({"id": "id_password2"})
+        self.fields['email'].widget.attrs.update({"id": "id_email"})
 
     def clean(self):
         cleaned_data = super().clean()

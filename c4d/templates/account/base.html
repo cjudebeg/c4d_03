@@ -3,12 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <title>{% block title %}C4D{% endblock %}</title>
+
   <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+
   <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
 <body>
   <div id="content">
     {% block content %}{% endblock %}
   </div>
+  <!-- Load zxcvbn for password strength checking
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/zxcvbn/4.4.2/zxcvbn.js"></script> -->
 </body>
 </html>

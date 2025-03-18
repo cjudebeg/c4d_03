@@ -54,25 +54,6 @@ import re
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
 
-class OneSpaceValidator:
-    """
-    Ensures that consecutive spaces in the password are replaced by a single space.
-    If consecutive spaces are found, we inform the user accordingly.
-    """
-
-    def validate(self, password, user=None):
-        # Replace two or more consecutive spaces with a single space
-        new_password = re.sub(r'\s{2,}', ' ', password)
-        if new_password != password:
-            # Let the user know we replaced consecutive spaces
-            raise ValidationError(
-                _("We replaced consecutive spaces with a single space in your password."),
-                code='password_multiple_spaces'
-            )
-
-    def get_help_text(self):
-        return _("Your password cannot contain consecutive spaces; they will be replaced by a single space.")
-
 
 class UsernamePasswordSimilarityValidator:
     """
