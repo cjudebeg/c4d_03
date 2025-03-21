@@ -1,0 +1,107 @@
+{% extends "layouts/box.html" %}
+{% load allauth i18n %}
+{% block head_title %}
+    {% trans "Email Addresses" %}
+{% endblock head_title %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+
+<h1 class="text-xl font-bold mb-4">{% trans "Email Addresses" %}</h1>
+
+{% if emailaddresses %}
+  <p class="mb-4 text-gray-700">
+    {% trans "The following email addresses are associated with your account:" %}
+  </p>
+  {% url 'account_email' as email_url %}
+  <form method="post" action="{{ email_url }}" class="mb-6">
+    {% csrf_token %}
+    <div class="mb-4">
+      {% for radio in emailaddress_radios %}
+        {% with emailaddress=radio.emailaddress %}
+          <label for="{{ radio.id }}" class="block border p-4 hover:bg-gray-50">
+            <div class="flex items-center space-x-2">
+              <input
+                type="radio"
+                name="email"
+                value="{{ emailaddress.email }}"
+                id="{{ radio.id }}"
+                {% if radio.checked %}checked{% endif %}
+                class="form-radio text-blue-500 mr-2"
+              />
+              <span class="text-gray-800 break-all">{{ emailaddress.email }}</span>
+            </div>
+            <div class="flex space-x-4 mt-2">
+              {% if emailaddress.primary %}
+                <span class="text-sm font-medium px-2 py-1 bg-gray-200 text-gray-600 cursor-default">
+                  {% trans "Primary" %}
+                </span>
+              {% endif %}
+              {% if emailaddress.verified %}
+                <span class="text-sm font-medium px-2 py-1 bg-green-500 text-white cursor-default">
+                  {% trans "Verified" %}
+                </span>
+              {% else %}
+                <span class="text-sm font-medium px-2 py-1 bg-yellow-200 text-yellow-600 cursor-default">
+                  {% trans "Unverified" %}
+                </span>
+              {% endif %}
+            </div>
+          </label>
+        {% endwith %}
+      {% endfor %}
+    </div>
+    <div class="flex gap-2 mt-4">
+      <button type="submit" name="action_primary" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 text-sm">
+        {% trans "Make Primary" %}
+      </button>
+      <button type="submit" name="action_send" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 text-sm transition-colors duration-150">
+        {% trans "Re‑send Verification" %}
+      </button>
+      <button type="submit" name="action_remove" class="bg-red-500 hover:bg-red-600 text-white py-2 px-4 text-sm">
+        {% trans "Remove" %}
+      </button>
+    </div>
+  </form>
+{% else %}
+  {% include "account/snippets/warn_no_email.html" %}
+{% endif %}
+
+{% if can_add_email %}
+  <h2 class="text-xl font-bold mb-4">{% trans "Add Email Address" %}</h2>
+  {% url 'account_email' as action_url %}
+  <form method="post" action="{{ action_url }}">
+    {% csrf_token %}
+    <div class="mb-4">
+      <label for="{{ form.email.id_for_label }}" class="block mb-1 font-semibold">
+        {% trans "Email:" %}
+      </label>
+      <input type="text" name="email" id="{{ form.email.auto_id }}" value="{{ form.email.value|default:'' }}"
+             class="block w-full bg-gray-100 px-4 py-2 mb-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+             placeholder="Enter your email">
+      {% if form.email.errors %}
+        <p class="text-red-500 text-sm mt-1">{{ form.email.errors }}</p>
+      {% endif %}
+    </div>
+    <button type="submit" name="action_add" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 text-sm">
+      {% trans "Add Email" %}
+    </button>
+  </form>
+{% endif %}
+{% endblock content %}
+
+{% block extra_body %}
+<script>
+  (function() {
+    var message = "{% trans 'Do you really want to remove the selected email address?' %}";
+    var removeBtn = document.getElementsByName('action_remove')[0];
+    if (removeBtn) {
+      removeBtn.addEventListener('click', function(e) {
+        if (!confirm(message)) {
+          e.preventDefault();
+        }
+      });
+    }
+  })();
+</script>
+{% endblock extra_body %}

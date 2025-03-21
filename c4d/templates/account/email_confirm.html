@@ -1,0 +1,37 @@
+{% extends "layouts/box.html" %}
+{% load i18n %}
+{% load account %}
+{% load allauth %}
+{% block head_title %}
+    {% trans "Confirm Email Address" %}
+{% endblock head_title %}
+{% block content %}
+    <h1 class="text-2xl font-bold mb-4">{% trans "Confirm Email Address" %}</h1>
+    {% if confirmation %}
+        {% user_display confirmation.email_address.user as user_display %}
+        {% if can_confirm %}
+            <p class="mb-4 text-gray-700">
+                {% blocktrans with confirmation.email_address.email as email %}
+                    Please confirm that <a href="mailto:{{ email }}" class="text-blue-500 underline">{{ email }}</a> is your email address.
+                {% endblocktrans %}
+            </p>
+            {% url 'account_confirm_email' confirmation.key as action_url %}
+            <form method="post" action="{{ action_url }}" class="flex justify-start">
+                {% csrf_token %}
+                {{ redirect_field }}
+                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4">
+                    {% trans 'Confirm' %}
+                </button>
+            </form>
+        {% else %}
+            <p class="mb-4 text-gray-700">
+                {% blocktrans %}Unable to confirm the email because it is already confirmed by a different account.{% endblocktrans %}
+            </p>
+        {% endif %}
+    {% else %}
+        {% url 'account_email' as email_url %}
+        <p class="mb-4 text-gray-700">
+            {% blocktrans %}This email confirmation link expired or is invalid. Please <a href="{{ email_url }}" class="text-blue-500 underline">issue a new email confirmation request</a>.{% endblocktrans %}
+        </p>
+    {% endif %}
+{% endblock content %}
