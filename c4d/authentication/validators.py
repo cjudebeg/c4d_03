@@ -3,12 +3,13 @@ from django.utils.translation import gettext as _
 import re
 from django.utils.deconstruct import deconstructible
 
+
 class NewPasswordNotSameAsOldValidator:
     def validate(self, password, user=None):
         if user and user.check_password(password):
             raise ValidationError(
                 _("The new password cannot be the same as your current password."),
-                code='password_no_change',
+                code="password_no_change",
             )
 
     def get_help_text(self):
@@ -26,33 +27,19 @@ class MaximumLengthValidator:
         if len(password) > self.max_length:
 
             raise ValidationError(
-
-                _("This password is greater than the maximum of %(max_length)d characters."),
-
-                code='password_too_long',
-
-                params={'max_length': self.max_length},
-
+                _(
+                    "This password is greater than the maximum of %(max_length)d characters."
+                ),
+                code="password_too_long",
+                params={"max_length": self.max_length},
             )
 
     def get_help_text(self):
 
         return _(
-
             "Your password can be a maximum of %(max_length)d characters."
-
-            % {'max_length': self.max_length}
-
-        ) 
-    
-
-
-
- # ====================
-
-import re
-from django.core.exceptions import ValidationError
-from django.utils.translation import gettext as _
+            % {"max_length": self.max_length}
+        )
 
 
 class UsernamePasswordSimilarityValidator:
@@ -69,7 +56,7 @@ class UsernamePasswordSimilarityValidator:
             if similarity >= self.max_similarity:
                 raise ValidationError(
                     "The password is too similar to the username.",
-                    code='password_too_similar',
+                    code="password_too_similar",
                 )
 
     def get_help_text(self):
@@ -78,6 +65,7 @@ class UsernamePasswordSimilarityValidator:
     def _calculate_similarity(self, password, username):
         matches = sum(1 for x, y in zip(password, username) if x == y)
         return matches / max(len(password), len(username))
+
 
 # class BreachPasswordValidator:
 #     """
@@ -100,11 +88,15 @@ class UsernamePasswordSimilarityValidator:
 #     def get_help_text(self):
 #         return "Your password must not have been compromised in a data breach."
 
+
 class UnicodePasswordValidator:
     def validate(self, password, user=None):
-        if not re.match(r'^[\s\w\W]+$', password):  # Allows all Unicode and whitespace characters
-            raise ValidationError("Your password must allow any Unicode character, including emojis.")
-        
+        if not re.match(
+            r"^[\s\w\W]+$", password
+        ):  # Allows all Unicode and whitespace characters
+            raise ValidationError(
+                "Your password must allow any Unicode character, including emojis."
+            )
+
     def get_help_text(self):
         return "Your password can contain any character, including Unicode and emojis."
-   
