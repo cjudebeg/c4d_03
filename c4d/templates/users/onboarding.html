@@ -10,99 +10,70 @@
 {% endif %}
 
 <div class="text-center flex flex-col items-center mb-4">
-  <!-- 
-  {% if user.profile.avatar %}
-    <img id="avatar" class="w-20 h-20 rounded-full object-cover mb-3"
-         src="{{ user.profile.avatar.url }}" alt="Avatar" />
-  {% else %}
-    <img id="avatar" class="w-20 h-20 rounded-full object-cover mb-3"
-         src="{% static 'images/default-avatar.png' %}" alt="Avatar" />
-  {% endif %}
-  -->
-  
   <p class="mb-4 text-sm text-gray-600">
     Note: You have to complete the Onboarding in order to see the Job postings.
   </p>
-
   <div class="text-center max-w-md">
-      <h3 id="displayname" class="text-xl font-semibold mb-1">{{ user.profile.displayname|default:"" }}</h3>
-      <p class="text-gray-400 flex items-center justify-center gap-2">
-        Your email: 
-        <strong>{{ user.email }}</strong>
-        <!-- "Edit" button to /accounts/email/ -->
+      <h3 id="displayname" class="text-xl font-semibold mb-1">
+        {{ user.profile.displayname|default:"" }}
+      </h3>
+      <p class="text-gray-400 mb-2">
+        Your email: <strong>{{ user.email }}</strong>
+      </p>
+      <div class="flex items-center justify-center gap-2">
+        <!-- "Edit Email" link -->
         <a 
           href="/accounts/email/" 
           class="text-xs bg-gray-200 text-gray-800 px-2 py-1 hover:bg-gray-300 transition"
         >
-          Edit
+        Add email
         </a>
-      </p>
+        <!-- "Change Password" link -->
+        <a
+          href="{% url 'account_change_password' %}"
+          class="text-xs bg-gray-200 text-gray-800 px-2 py-1 hover:bg-gray-300 transition"
+        >
+          Change Password
+        </a>
+      </div>
   </div>
 </div>
 
 <form method="POST" enctype="multipart/form-data" class="space-y-6">
     {% csrf_token %}
 
-    {# We removed the block that showed form.non_field_errors here, so any top-level error only shows via messages #}
+    {# If there's a top-level error, it's displayed via messages #}
 
     {% if onboarding %}
-      {# Render basic fields only, excluding "skill_sets" and "skill_level" #}
+      <!-- Fields relevant to Onboarding: first_name, last_name, date_of_birth, clearance_level, clearance_no, clearance_revalidation -->
       <div class="space-y-4">
         <div>
-          {{ form.first_name.errors }}
           <label for="id_first_name" class="block font-semibold mb-1">First Name</label>
           {{ form.first_name }}
         </div>
-
         <div>
-          {{ form.middle_name.errors }}
-          <label for="id_middle_name" class="block font-semibold mb-1">Middle Name</label>
-          {{ form.middle_name }}
-        </div>
-
-        <div>
-          {{ form.last_name.errors }}
           <label for="id_last_name" class="block font-semibold mb-1">Last Name</label>
           {{ form.last_name }}
         </div>
-
         <div>
-          {{ form.date_of_birth.errors }}
           <label for="id_date_of_birth" class="block font-semibold mb-1">Date of Birth</label>
           {{ form.date_of_birth }}
         </div>
-
         <div>
-          {{ form.state.errors }}
-          <label for="id_state" class="block font-semibold mb-1">State</label>
-          {{ form.state }}
-        </div>
-
-        <div>
-          {{ form.suburb.errors }}
-          <label for="id_suburb" class="block font-semibold mb-1">Suburb</label>
-          {{ form.suburb }}
-        </div>
-
-        <div>
-          {{ form.clearance_level.errors }}
           <label for="id_clearance_level" class="block font-semibold mb-1">Clearance Level</label>
           {{ form.clearance_level }}
         </div>
-
         <div>
-          {{ form.clearance_no.errors }}
           <label for="id_clearance_no" class="block font-semibold mb-1">CSID Number</label>
           {{ form.clearance_no }}
         </div>
-
-        <div>
-          {{ form.clearance_expiry.errors }}
-          <label for="id_clearance_expiry" class="block font-semibold mb-1">Expiry Date</label>
-          {{ form.clearance_expiry }}
-        </div>
+        <!-- <div>
+          <label for="id_clearance_revalidation" class="block font-semibold mb-1">Clearance Revalidation</label>
+          {{ form.clearance_revalidation }}
+        </div> -->
       </div>
     {% else %}
+      <!-- For profile edit, just show everything from form.as_p -->
       {{ form.as_p }}
     {% endif %}
 
@@ -110,7 +81,6 @@
       <button type="submit" class="bg-blue-500 text-white py-2 px-4">
         Submit
       </button>
-
       {% if onboarding %}
         <a class="bg-gray-500 text-white py-2 px-4" href="{% url 'home' %}">
           Skip for now
@@ -124,7 +94,7 @@
 </form>
 
 <script>
-    // This updates the display name
+    // Dynamically update the display name if present
     const displayNameInput = document.getElementById('id_displayname');
     const displayNameOutput = document.getElementById('displayname');
     if (displayNameInput && displayNameOutput) {

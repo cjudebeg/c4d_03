@@ -15,7 +15,7 @@
       <p><strong>First Name:</strong> {{ profile.first_name|default:"Not provided." }}</p>
       <p><strong>Middle Name:</strong> {{ profile.middle_name|default:"Not provided." }}</p>
       <p><strong>Last Name:</strong> {{ profile.last_name|default:"Not provided." }}</p>
-      <p><strong>Date of Birth:</strong> {{ profile.date_of_birth|default:"Not provided." }}</p>
+      <!-- <p><strong>Date of Birth:</strong> {{ profile.date_of_birth|default:"Not provided." }}</p> -->
       <p>
         <strong>Location:</strong>
         {% if profile.state and profile.suburb %}
@@ -34,7 +34,7 @@
       </p>
       <p><strong>Security Clearance:</strong> {{ profile.clearance_level|default:"Not provided." }}</p>
       <p><strong>Clearance Number:</strong> {{ profile.clearance_no|default:"Not provided." }}</p>
-      <p><strong>Clearance Expiry:</strong> {{ profile.clearance_expiry|default:"Not provided." }}</p>
+      <!-- <p><strong>Clearance Expiry:</strong> {{ profile.clearance_expiry|default:"Not provided." }}</p> -->
     </div>
   </section>
 
@@ -81,7 +81,7 @@
           <td class="pt-4 pb-2 pl-4">
             <!-- Link to /accounts/email/ -->
             <a href="/accounts/email/" class="font-medium text-blue-600 hover:underline">
-              Edit
+              Edit email settings
             </a>
           </td>
         </tr>

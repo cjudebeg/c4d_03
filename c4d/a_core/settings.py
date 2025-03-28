@@ -135,6 +135,10 @@ AUTH_PASSWORD_VALIDATORS = [
 
 ACCOUNT_FORMS = {'signup': 'authentication.forms.CustomUserSignupForm'}
 
+ACCOUNT_FORMS = {
+    'add_email': 'authentication.forms.AddEmailForm', 
+}
+
 # Internationalisation settings
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Australia/Sydney'

@@ -55,6 +55,11 @@
       Email:
     </label>
     {{ form.email }}
+    {% if form.email.errors %}
+      <div class="text-red-500 text-sm mt-1">
+          <p>{{ error }}</p>
+      </div>
+    {% endif %}
   </div>
 
   <!-- Password Field + Eye + Strength with inline (i) tooltip -->
@@ -70,7 +75,6 @@
       </span>
     </label>
     <div class="relative">
-      <!-- alpine toggle type -->
       <input
         :type="showPass ? 'text' : 'password'"
         id="{{ form.password1.id_for_label }}"
@@ -81,7 +85,6 @@
                focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
         required
       >
-      <!-- Eye icon in input -->
       <span
         class="absolute inset-y-0 right-3 flex items-center cursor-pointer text-blue-600"
         @click="showPass = !showPass"
@@ -89,7 +92,6 @@
         <i :class="showPass ? 'fa fa-eye-slash' : 'fa fa-eye'"></i>
       </span>
     </div>
-    <!-- Strength meter text -->
     <div id="password-strength" class="text-sm mt-2 text-gray-700"></div>
   </div>
 
@@ -147,7 +149,6 @@
   })();
 </script>
 
-<!-- pwd strength using zxcvbn -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     const pwd1Field = document.getElementById('id_password1');
@@ -169,10 +170,8 @@
   });
 </script>
 
-<!-- Tippy.js usage for Alpine -->
 <script src="https://unpkg.com/@popperjs/core@2"></script>
 <script src="https://unpkg.com/tippy.js@6"></script>
- 
 <script>
     document.addEventListener('alpine:init', () => {
         Alpine.magic('tooltip', el => message => {

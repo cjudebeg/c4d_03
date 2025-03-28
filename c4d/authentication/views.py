@@ -7,7 +7,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.conf import settings
 from django.contrib.auth.views import redirect_to_login
-from .forms import ProfileUpdateForm, EmailForm
+from .forms import ProfileUpdateForm, EmailForm, CustomUserSignupForm
 from .models import Profile
 from django.db import IntegrityError
 
@@ -18,51 +18,27 @@ import time
 
 # from .forms import CustomUserChangeForm, LoginForm
 
-# def register_view(request):
-#     try:
-#         if request.method == "POST":
-#             form = CustomUserChangeForm(request.POST)
-#             if form.is_valid():
-#                 form.save()
-#                 return redirect("login")
-#             else:
-#                 print("Registration form errors:", form.errors)  
-#         else:
-#             form = CustomUserChangeForm()
-#         return render(request, "register.html", {"form": form})
+def register_view(request):
+    try:
+        if request.method == "POST":
+            form = CustomUserSignupForm(request.POST)
+            if form.is_valid():
+                form.save(request)
+                return redirect("login")
+            else:
+                print("Registration form errors:", form.errors)  
+        else:
+            form = CustomUserSignupForm()
+        return render(request, "register.html", {"form": form})
     
-#     except IntegrityError as e:  # Handles duplicate email issues
-#         print(f"Database error: {e}")
-#         form.add_error("email", "This email is already registered.")
-#         return render(request, "register.html", {"form": form})
+    except IntegrityError as e:  # Handles duplicate email issues
+        print(f"Database error: {e}")
+        form.add_error("email", "This email is already registered.")
+        return render(request, "register.html", {"form": form})
     
-#     except Exception as e:  # Catch-all for unexpected errors
-#         print(f"Unexpected error in register_view: {e}")
-#         return render(request, "register.html", {"form": form, "error": "Something went wrong. Please try again."})
-
-
-# def login_view(request):
-#     try:
-#         if request.method == "POST":
-#             form = LoginForm(request.POST)
-#             if form.is_valid():
-#                 email = form.cleaned_data.get("email")
-#                 password = form.cleaned_data.get("password")
-#
-#                 # USERNAME = 'email'
-#                 user = authenticate(request, username=email, password=password)
-#                 if user is not None:
-#                     login(request, user)
-#                     return redirect("profile")
-#                 else:
-#                     form.add_error(None, "Invalid credentials. Please try again.")
-#         else:
-#             form = LoginForm()
-#         return render(request, "login.html", {"form": form})
-#     
-#     except Exception as e:
-#         print(f"Unexpected error in login_view: {e}")
-#         return render(request, "login.html", {"form": form, "error": "Something went wrong. Please try again."})
+    except Exception as e:  # Catch-all for unexpected errors
+        print(f"Unexpected error in register_view: {e}")
+        return render(request, "register.html", {"form": form, "error": "Something went wrong. Please try again."})
 
 
 @login_required
@@ -110,7 +86,6 @@ def mfa_verify(request):
             messages.error(request, "OTP has expired. Please request a new one.")
             return redirect("mfa_resend")
         if code_in_session and token == code_in_session:
-            # Marking the mfa confirmed and remove info from session
             request.session["mfa_confirmed"] = True
             del request.session["mfa_code"]
             del request.session["mfa_code_generated_at"]
@@ -120,7 +95,6 @@ def mfa_verify(request):
         else:
             messages.error(request, "Invalid OTP. Please try again.")
 
-    # Calculate wait time for resend availability (1 minute)
     code_generated = request.session.get("mfa_code_generated_at")
     resend_wait = 0
     otp_resend_available = False
@@ -142,19 +116,16 @@ def mfa_verify(request):
 @login_required
 def mfa_resend(request):
 
-    # Resend new OTP if at least 1 minute has passed since the last OTP
-
     now = int(time.time())
     code_generated = request.session.get("mfa_code_generated_at", 0)
     if now - code_generated < 60:
         messages.error(request, "You cannot resend OTP until 1 minute has passed.")
         return redirect("mfa_verify")
     user = request.user
-    # Generate new OTP
     code = "".join(random.choices(string.digits, k=6))
     request.session["mfa_code"] = code
     request.session["mfa_code_generated_at"] = now
-    request.session["mfa_code_expires_at"] = now + 600  # 10 minutes 
+    request.session["mfa_code_expires_at"] = now + 600
     send_mail(
         subject="Your MFA Code",
         message=f"Your new MFA code is: {code}",
@@ -167,11 +138,9 @@ def mfa_resend(request):
 
 @login_required
 def onboarding_view(request):
-    # First force MFA if not confirmed
     if not request.session.get("mfa_confirmed", False):
         return redirect("mfa_setup")
 
-    # Get/create the profile for the current user
     try:
         profile = request.user.profile
     except ObjectDoesNotExist:
@@ -188,7 +157,6 @@ def onboarding_view(request):
             profile.save()
             return redirect("profile")
         else:
-            # If form invalid, capture any nonfield error and shows as message
             if "__all__" in form.errors:
                 for error_msg in form.errors["__all__"]:
                     messages.error(request, error_msg)
@@ -205,7 +173,6 @@ def onboarding_view(request):
 
 @login_required
 def profile_view(request, username=None):
-    # First, force MFA if not confirmed
     if not request.session.get("mfa_confirmed", False):
         return redirect("mfa_setup")
 
@@ -217,7 +184,6 @@ def profile_view(request, username=None):
         except ObjectDoesNotExist:
             return redirect_to_login(request.get_full_path())
 
-    # If the user has not finished onboarding, force 
     if not profile.onboarding_completed:
         return redirect("onboarding")
     
@@ -239,7 +205,6 @@ def profile_edit_view(request):
             form.save()
             return redirect("profile")
         else:
-
             if "__all__" in form.errors:
                 for error_msg in form.errors["__all__"]:
                     messages.error(request, error_msg)
