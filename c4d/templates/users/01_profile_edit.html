@@ -1,0 +1,128 @@
+{% extends 'layouts/box_a.html' %}
+{% load static %}
+
+{% block content %}
+
+{% if onboarding %}
+<h2 class="text-2xl font-bold mb-6">Complete your Profile</h2>
+{% else %}
+<h2 class="text-2xl font-bold mb-6">Edit your Profile</h2>
+{% endif %}
+
+<div class="text-center flex flex-col items-center mb-4">
+
+    <!-- {% if user.profile.avatar %}
+      <img id="avatar" class="w-20 h-20 rounded-full object-cover mb-3"
+           src="{{ user.profile.avatar.url }}"
+           alt="Avatar" />
+    {% else %}
+      <img id="avatar" class="w-20 h-20 rounded-full object-cover mb-3"
+           src="{% static 'images/default-avatar.png' %}"
+           alt="Avatar" />
+    {% endif %} -->
+
+    <div class="text-center max-w-md">
+      <h3 id="displayname" class="text-xl font-semibold mb-1">{{ user.profile.displayname|default:"" }}</h3>
+      <p class="text-gray-400 flex items-center justify-center gap-2">
+        Your email: 
+        <strong>{{ user.email }}</strong>
+
+        <a 
+          href="/accounts/email/" 
+          class="text-xs bg-gray-200 text-gray-800 px-2 py-1 hover:bg-gray-300 transition"
+        >
+          Edit
+        </a>
+      </p>
+  </div>
+</div>
+
+<form method="POST" enctype="multipart/form-data" class="space-y-6">
+    {% csrf_token %}
+    
+    <div class="space-y-4">
+      <div>
+        {{ form.first_name.errors }}
+        <label for="id_first_name" class="block font-semibold mb-1">First Name</label>
+        {{ form.first_name }}
+      </div>
+
+      <div>
+        {{ form.middle_name.errors }}
+        <label for="id_middle_name" class="block font-semibold mb-1">Middle Name</label>
+        {{ form.middle_name }}
+      </div>
+
+      <div>
+        {{ form.last_name.errors }}
+        <label for="id_last_name" class="block font-semibold mb-1">Last Name</label>
+        {{ form.last_name }}
+      </div>
+
+      <!-- <div>
+        {{ form.date_of_birth.errors }}
+        <label for="id_date_of_birth" class="block font-semibold mb-1">Date of Birth</label>
+        {{ form.date_of_birth }}
+      </div> -->
+
+      <div>
+        {{ form.state.errors }}
+        <label for="id_state" class="block font-semibold mb-1">State</label>
+        {{ form.state }}
+      </div>
+
+      <div>
+        {{ form.suburb.errors }}
+        <label for="id_suburb" class="block font-semibold mb-1">Suburb</label>
+        {{ form.suburb }}
+      </div>
+
+      <div>
+        {{ form.clearance_level.errors }}
+        <label for="id_clearance_level" class="block font-semibold mb-1">Clearance Level</label>
+        {{ form.clearance_level }}
+      </div>
+
+      <div>
+        {{ form.clearance_no.errors }}
+        <label for="id_clearance_no" class="block font-semibold mb-1">CSID Number</label>
+        {{ form.clearance_no }}
+      </div>
+
+      <div>
+        {{ form.clearance_expiry.errors }}
+        <label for="id_clearance_expiry" class="block font-semibold mb-1">Expiry Date</label>
+        {{ form.clearance_expiry }}
+      </div>
+
+      <div>
+        {{ form.skill_sets.errors }}
+        <label for="id_skill_sets" class="block font-semibold mb-1">Skill Sets</label>
+        {{ form.skill_sets }}
+      </div>
+
+      <div>
+        {{ form.skill_level.errors }}
+        <label for="id_skill_level" class="block font-semibold mb-1">Skill Level</label>
+        {{ form.skill_level }}
+      </div>
+    </div>
+
+    <div class="mt-4 flex items-center gap-2">
+      <button type="submit" class="bg-blue-500 text-white py-2 px-4">
+        Submit
+      </button>
+
+      {% if onboarding %}
+        <a class="bg-gray-500 text-white py-2 px-4" href="{% url 'home' %}">
+          Skip
+        </a>
+      {% else %}
+        <a class="bg-gray-500 text-white py-2 px-4" href="{{ request.META.HTTP_REFERER }}">
+          Cancel
+        </a>
+      {% endif %}
+    </div>
+</form>
+
+{% endblock %}

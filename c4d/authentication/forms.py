@@ -90,10 +90,10 @@ class ProfileUpdateForm(ModelForm):
         }
         labels = {
             "date_of_birth": "Date of Birth",
-            "state": "Your Location",
-            "clearance_level": "Your AGVSA security clearance",
+            "state": "State or Territory",
+            "clearance_level": "AGVSA security clearance level",
             "clearance_no": "CSID Number",
-            "clearance_expiry": "Expiry Date",
+            "clearance_expiry": "Re-validation Date",
         }
         help_texts = {
             "state": "Select state/territory.",
@@ -111,19 +111,17 @@ class ProfileUpdateForm(ModelForm):
         self.fields["date_of_birth"].input_formats = ["%d/%m/%Y", "%Y-%m-%d"]
 
         self.fields["first_name"].widget.attrs.update(
-            {"placeholder": "Your First Name"}
+            {"placeholder": "Enter first name"}
         )
         self.fields["middle_name"].widget.attrs.update(
-            {"placeholder": "Your Middle Name"}
+            {"placeholder": "Enter middle name"}
         )
-        self.fields["last_name"].widget.attrs.update({"placeholder": "Your Last Name"})
+        self.fields["last_name"].widget.attrs.update({"placeholder": "Enter last name"})
         self.fields["date_of_birth"].widget.attrs.update(
             {"placeholder": "In DD/MM/YYYY format"}
         )
-        self.fields["suburb"].widget.attrs.update({"placeholder": "Your Suburb"})
-        self.fields["clearance_no"].widget.attrs.update(
-            {"placeholder": "Your CSID number"}
-        )
+        self.fields["suburb"].widget.attrs.update({"placeholder": "Suburb"})
+        self.fields["clearance_no"].widget.attrs.update({"placeholder": "CSID number"})
 
         # Replace the dropdown default "---------" value with placeholder
         original_state_choices = list(self.fields["state"].choices)
