@@ -1,8 +1,17 @@
 {% extends 'layouts/box.html' %}
+{% load static %}
 
 {% block content %}
-
 <h1 class="mb-8">Account Settings</h1>
+
+<!-- Display Django messages -->
+{% if messages %}
+  <ul>
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
 
 <table class="w-full text-sm text-left text-gray-500">
     <tbody>
@@ -10,32 +19,28 @@
             <th scope="row" class="pt-4 pb-1 text-base font-bold text-gray-900">
                 Email address
             </th>
-            <td id="email-address" class="pt-4 pb-1 pl-4">
+            <td class="pt-4 pb-1 pl-4">
                 {% if user.email %}{{ user.email }}{% else %}No Email{% endif %}
             </td>
             <td class="pt-4 pb-1 pl-4">
-                <a id="email-edit" class="cursor-pointer font-medium text-blue-600 hover:underline"
-                    hx-get="{% url 'profile-emailchange' %}" hx-target="#email-address" hx-swap="innerHTML">
-                    Edit
-                </a>
+                <a href="#" id="email-edit-link" class="cursor-pointer font-medium text-blue-600 hover:underline" onclick="toggleEmailForm(); return false;">Edit</a>
             </td>
         </tr>
         <tr class="border-b">
-            <th scope="row" class="pb-4 font-medium text-gray-900">
-            </th>
+            <th scope="row" class="pb-4 font-medium text-gray-900"></th>
             <td class="pb-4 pl-4">
                 {% if user.emailaddress_set.first.verified %}
-                <span class="text-green-500">Verified</span>{% else %}
-                <span class="text-amber-500">Not verified</span>
+                  <span class="text-green-500">Verified</span>
+                {% else %}
+                  <span class="text-amber-500">Not verified</span>
                 {% endif %}
             </td>
             <td class="pb-4 pl-4">
-                <a href="{% url 'profile-emailverify' %}" class="font-medium text-blue-600 hover:underline">
-                    {% if not user.emailaddress_set.first.verified %}Verify{% endif %}
-                </a>
+                {% if not user.emailaddress_set.first.verified %}
+                  <a href="{% url 'profile-emailverify' %}" class="font-medium text-blue-600 hover:underline">Verify</a>
+                {% endif %}
             </td>
         </tr>
-
         <tr class="border-b">
             <th scope="row" class="py-4 text-base font-bold text-gray-900">
                 Delete Account
@@ -52,5 +57,25 @@
     </tbody>
 </table>
 
+<!-- Hidden Email Edit Form -->
+<div id="email-edit-form" style="display: none; margin-top: 20px;">
+    <form method="POST" action="{% url 'profile-emailchange' %}">
+        {% csrf_token %}
+        <label for="id_email">Email:</label>
+        {{ form.email }}
+        <button type="submit">Save</button>
+    </form>
+</div>
+
+<script>
+function toggleEmailForm(){
+    var formDiv = document.getElementById("email-edit-form");
+    if(formDiv.style.display === "none"){
+        formDiv.style.display = "block";
+    } else {
+        formDiv.style.display = "none";
+    }
+}
+</script>
 
 {% endblock %}

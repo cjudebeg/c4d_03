@@ -4,9 +4,9 @@
 {% block content %}
 
 {% if onboarding %}
-<h2 class="text-2xl font-bold mb-6">Onboarding</h2>
+  <h2 class="text-2xl font-bold mb-6">Onboarding</h2>
 {% else %}
-<h2 class="text-2xl font-bold mb-6">Edit your Profile</h2>
+  <h2 class="text-2xl font-bold mb-6">Edit your Profile</h2>
 {% endif %}
 
 <div class="text-center flex flex-col items-center mb-4">
@@ -18,40 +18,66 @@
         {{ user.profile.displayname|default:"" }}
       </h3>
       <p class="text-gray-400 mb-2">
-        Your email: <strong>{{ user.email }}</strong>
+        Your email: <strong id="current-email">
+          {% if user.email %}{{ user.email }}{% else %}Not provided{% endif %}
+        </strong>
       </p>
       <div class="flex items-center justify-center gap-2">
-        <!-- "Edit Email" link -->
-        <a 
-          href="/accounts/email/" 
-          class="text-xs bg-gray-200 text-gray-800 px-2 py-1 hover:bg-gray-300 transition"
-        >
-        Add email
-        </a>
+        <!-- "Add Email" button toggles the inline email form -->
+        <button type="button" id="toggle-email-btn" onclick="toggleEmailInput()" class="text-xs bg-gray-200 text-gray-800 px-2 py-1 hover:bg-gray-300 transition">
+          Change Email
+        </button>
         <!-- "Change Password" link -->
-        <a
-          href="{% url 'account_change_password' %}"
-          class="text-xs bg-gray-200 text-gray-800 px-2 py-1 hover:bg-gray-300 transition"
-        >
+        <a href="{% url 'account_change_password' %}" class="text-xs bg-gray-200 text-gray-800 px-2 py-1 hover:bg-gray-300 transition">
           Change Password
         </a>
       </div>
   </div>
 </div>
 
+<!-- Inline Email Form (hidden by default) -->
+<div id="email-form-container" style="display: none;" class="max-w-md mx-auto mb-4">
+  <form id="email-change-form" method="POST" action="{% url 'profile-emailchange' %}">
+    {% csrf_token %}
+    <div class="flex flex-col md:flex-row md:items-center gap-2">
+      <input 
+        type="email" 
+        name="email" 
+        id="id_email" 
+        placeholder="Enter new email address" 
+        class="bg-gray-100 px-3 py-2 border border-gray-300 flex-grow" 
+        required>
+      <div class="flex gap-2">
+        <button type="submit" class="bg-blue-500 text-white px-4 py-2">
+          Update
+        </button>
+        <button type="button" onclick="toggleEmailInput()" class="bg-gray-500 text-white px-4 py-2">
+          Cancel
+        </button>
+      </div>
+    </div>
+    <div id="email-form-message" class="mt-2 text-sm"></div>
+  </form>
+</div>
+
 <form method="POST" enctype="multipart/form-data" class="space-y-6">
     {% csrf_token %}
 
-    {# If there's a top-level error, it's displayed via messages #}
-
     {% if onboarding %}
-      <!-- Fields relevant to Onboarding: first_name, last_name, date_of_birth, clearance_level, clearance_no, clearance_revalidation -->
+      <!-- Onboarding fields -->
       <div class="space-y-4">
         <div>
+          {{ form.first_name.errors }}
           <label for="id_first_name" class="block font-semibold mb-1">First Name</label>
           {{ form.first_name }}
         </div>
         <div>
+          {{ form.middle_name.errors }}
+          <label for="id_middle_name" class="block font-semibold mb-1">Middle Name</label>
+          {{ form.middle_name }}
+        </div>
+        <div>
+          {{ form.last_name.errors }}
           <label for="id_last_name" class="block font-semibold mb-1">Last Name</label>
           {{ form.last_name }}
         </div>
@@ -64,16 +90,56 @@
           {{ form.clearance_level }}
         </div>
         <div>
+          {{ form.clearance_no.errors }}
           <label for="id_clearance_no" class="block font-semibold mb-1">CSID Number</label>
-          {{ form.clearance_no }}
+          <div class="flex">
+            <div class="flex items-center justify-center px-4 h-full bg-gray-200 border border-gray-300">
+              <span class="text-gray-600">CS</span>
+            </div>
+            {{ form.clearance_no }}
+          </div>
         </div>
-        <!-- <div>
-          <label for="id_clearance_revalidation" class="block font-semibold mb-1">Clearance Revalidation</label>
-          {{ form.clearance_revalidation }}
-        </div> -->
+        
+        <style>
+          /* Input field styles */
+          #id_first_name, #id_middle_name, #id_last_name {
+            width: 100%;
+            padding: 0.5rem;
+            outline: none;
+            height: 38px; 
+          }
+          
+          #id_first_name:focus, #id_middle_name:focus, #id_last_name:focus {
+            border-color: #3676de;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+          }
+          
+          /* CSID input field styles */
+          #id_clearance_no {
+            padding: 0.5rem;
+            width: 100%;
+            height: 38px;
+            outline: none;
+          }
+          
+          #id_clearance_no:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+          }
+          
+          /* Ensure the CS prefix has the same height as the input */
+          .flex > div.flex.items-center {
+            height: 38px;
+          }
+          
+          /* Placeholder style */
+          ::placeholder {
+            color: #141414; /* text-gray-400 */
+            opacity: 1;
+          }
+        </style>
       </div>
     {% else %}
-      <!-- For profile edit, just show everything from form.as_p -->
       {{ form.as_p }}
     {% endif %}
 
@@ -94,14 +160,74 @@
 </form>
 
 <script>
-    // Dynamically update the display name if present
-    const displayNameInput = document.getElementById('id_displayname');
-    const displayNameOutput = document.getElementById('displayname');
-    if (displayNameInput && displayNameOutput) {
-      displayNameInput.addEventListener('input', (event) => {
-          displayNameOutput.innerText = event.target.value;
-      });
+  // Toggle the inline email form visibility.
+  function toggleEmailInput() {
+    var container = document.getElementById('email-form-container');
+    var btn = document.getElementById('toggle-email-btn');
+    if (container.style.display === 'none' || container.style.display === '') {
+      container.style.display = 'block';
+      btn.textContent = 'Hide';
+    } else {
+      container.style.display = 'none';
+      btn.textContent = 'Add Email';
+      document.getElementById('email-form-message').innerHTML = '';
+      document.getElementById('email-change-form').reset();
     }
+  }
+
+  // Handle the email change form submission via AJAX.
+  document.getElementById('email-change-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var formData = new FormData(this);
+    var messageDiv = document.getElementById('email-form-message');
+    
+    fetch("{% url 'profile-emailchange' %}", {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        messageDiv.innerHTML = `<div class="text-green-600">${data.message}</div>`;
+        // Update the displayed email.
+        document.getElementById('current-email').textContent = data.email;
+        // Auto-hide the email form after success.
+        setTimeout(toggleEmailInput, 3000);
+      } else {
+        messageDiv.innerHTML = `<div class="text-red-600">${data.message}</div>`;
+      }
+    })
+    .catch(error => {
+      messageDiv.innerHTML = '<div class="text-red-600">An error occurred. Please try again.</div>';
+      console.error('Error:', error);
+    });
+  });
+  
+  // Optional: Update display name dynamically if using a display name field.
+  const displayNameInput = document.getElementById('id_displayname');
+  const displayNameOutput = document.getElementById('displayname');
+  if (displayNameInput && displayNameOutput) {
+    displayNameInput.addEventListener('input', (event) => {
+      displayNameOutput.innerText = event.target.value;
+    });
+  }
+  
+  // Set placeholders for name fields
+  document.addEventListener('DOMContentLoaded', function() {
+    // Add placeholders to the input fields
+    if (document.getElementById('id_first_name')) {
+      document.getElementById('id_first_name').setAttribute('placeholder', 'Enter your first name');
+    }
+    if (document.getElementById('id_middle_name')) {
+      document.getElementById('id_middle_name').setAttribute('placeholder', 'Enter your middle name');
+    }
+    if (document.getElementById('id_last_name')) {
+      document.getElementById('id_last_name').setAttribute('placeholder', 'Enter your last name');
+    }
+  });
 </script>
 
 {% endblock %}

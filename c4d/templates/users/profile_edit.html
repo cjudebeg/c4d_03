@@ -11,40 +11,51 @@
 
 <div class="text-center flex flex-col items-center mb-4">
 
-    <!-- {% if user.profile.avatar %}
-      <img id="avatar" class="w-20 h-20 rounded-full object-cover mb-3"
-           src="{{ user.profile.avatar.url }}"
-           alt="Avatar" />
-    {% else %}
-      <img id="avatar" class="w-20 h-20 rounded-full object-cover mb-3"
-           src="{% static 'images/default-avatar.png' %}"
-           alt="Avatar" />
-    {% endif %} -->
-
-    <div class="text-center max-w-md">
+  <div class="text-center max-w-md">
       <h3 id="displayname" class="text-xl font-semibold mb-1">
         {{ user.profile.displayname|default:"" }}
       </h3>
       <p class="text-gray-400 mb-2">
-        Your email: <strong>{{ user.email }}</strong>
+        Your email: <strong id="current-email">
+          {% if user.email %}{{ user.email }}{% else %}Not provided{% endif %}
+        </strong>
       </p>
       <div class="flex items-center justify-center gap-2">
-        <!-- "Edit Email" link -->
-        <a 
-          href="/accounts/email/" 
-          class="text-xs bg-gray-200 text-gray-800 px-2 py-1 hover:bg-gray-300 transition"
-        >
-        Add email
-        </a>
+        <!-- "Add Email" button toggles the inline email form -->
+        <button type="button" id="toggle-email-btn" onclick="toggleEmailInput()" class="text-xs bg-gray-200 text-gray-800 px-2 py-1 hover:bg-gray-300 transition">
+          Change Email
+        </button>
         <!-- "Change Password" link -->
-        <a
-          href="{% url 'account_change_password' %}"
-          class="text-xs bg-gray-200 text-gray-800 px-2 py-1 hover:bg-gray-300 transition"
-        >
+        <a href="{% url 'account_change_password' %}" class="text-xs bg-gray-200 text-gray-800 px-2 py-1 hover:bg-gray-300 transition">
           Change Password
         </a>
       </div>
   </div>
+</div>
+
+<!-- Inline Email Form (hidden by default) -->
+<div id="email-form-container" style="display: none;" class="max-w-md mx-auto mb-4">
+  <form id="email-change-form" method="POST" action="{% url 'profile-emailchange' %}">
+    {% csrf_token %}
+    <div class="flex flex-col md:flex-row md:items-center gap-2">
+      <input 
+        type="email" 
+        name="email" 
+        id="id_email" 
+        placeholder="Enter new email address" 
+        class="bg-gray-100 px-3 py-2 border border-gray-300 flex-grow" 
+        required>
+      <div class="flex gap-2">
+        <button type="submit" class="bg-blue-500 text-white px-4 py-2">
+          Update
+        </button>
+        <button type="button" onclick="toggleEmailInput()" class="bg-gray-500 text-white px-4 py-2">
+          Cancel
+        </button>
+      </div>
+    </div>
+    <div id="email-form-message" class="mt-2 text-sm"></div>
+  </form>
 </div>
 
 <form method="POST" enctype="multipart/form-data" class="space-y-6">
@@ -93,11 +104,63 @@
         {{ form.clearance_level }}
       </div>
 
+
       <div>
         {{ form.clearance_no.errors }}
         <label for="id_clearance_no" class="block font-semibold mb-1">CSID Number</label>
-        {{ form.clearance_no }}
+        <div class="flex">
+          <div class="flex items-center justify-center px-4 h-full bg-gray-200 border border-gray-300">
+            <span class="text-gray-600">CS</span>
+          </div>
+          {{ form.clearance_no }}
+        </div>
       </div>
+      
+      <style>
+        /* Input field styles for first, middle, last name */
+        #id_first_name, #id_middle_name, #id_last_name {
+          width: 100%;
+          padding: 0.5rem;
+          border: 1px solid #d1d5db;
+          outline: none;
+        }
+        
+        #id_first_name:focus, #id_middle_name:focus, #id_last_name:focus {
+          border-color: #3b82f6;
+          box-shadow: none; /* Remove box shadow on focus */
+        }
+        
+        /* Placeholder color for all inputs */
+        ::placeholder {
+          color: #000000;
+          opacity: 1; /* Firefox requires this */
+        }
+        
+        /* For older browsers */
+        ::-webkit-input-placeholder { color: #000000; }
+        ::-moz-placeholder { color: #000000; }
+        :-ms-input-placeholder { color: #000000; }
+        :-moz-placeholder { color: #000000; }
+        
+        /* CSID input field styles */
+        #id_clearance_no {
+          border: 1px solid #b7bbc1;
+          padding: 0.5rem;
+          width: 100%;
+          height: 38px;
+          outline: none;
+        }
+        
+        #id_clearance_no:focus {
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+        }
+        
+        /* Ensure the CS prefix has the same height as the input */
+        .flex > div.flex.items-center {
+          height: 38px;
+        }
+      </style>
 
       <!-- <div>
         {{ form.clearance_expiry.errors }}
@@ -134,5 +197,67 @@
       {% endif %}
     </div>
 </form>
+
+<script>
+  // Toggle the inline email form visibility.
+  function toggleEmailInput() {
+    var container = document.getElementById('email-form-container');
+    var btn = document.getElementById('toggle-email-btn');
+    if (container.style.display === 'none' || container.style.display === '') {
+      container.style.display = 'block';
+      btn.textContent = 'Hide';
+    } else {
+      container.style.display = 'none';
+      btn.textContent = 'Add Email';
+      document.getElementById('email-form-message').innerHTML = '';
+      document.getElementById('email-change-form').reset();
+    }
+  }
+
+  // Handle the email change form submission via AJAX.
+  document.getElementById('email-change-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var formData = new FormData(this);
+    var messageDiv = document.getElementById('email-form-message');
+    
+    fetch("{% url 'profile-emailchange' %}", {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        messageDiv.innerHTML = `<div class="text-green-600">${data.message}</div>`;
+        // Update the displayed email.
+        document.getElementById('current-email').textContent = data.email;
+        // Auto-hide the email form after success.
+        setTimeout(toggleEmailInput, 3000);
+      } else {
+        messageDiv.innerHTML = `<div class="text-red-600">${data.message}</div>`;
+      }
+    })
+    .catch(error => {
+      messageDiv.innerHTML = '<div class="text-red-600">An error occurred. Please try again.</div>';
+      console.error('Error:', error);
+    });
+  });
+  
+  // Set placeholders for name fields
+  document.addEventListener('DOMContentLoaded', function() {
+    // Add placeholders to the input fields
+    if (document.getElementById('id_first_name')) {
+      document.getElementById('id_first_name').setAttribute('placeholder', 'Enter your first name');
+    }
+    if (document.getElementById('id_middle_name')) {
+      document.getElementById('id_middle_name').setAttribute('placeholder', 'Enter your middle name');
+    }
+    if (document.getElementById('id_last_name')) {
+      document.getElementById('id_last_name').setAttribute('placeholder', 'Enter your last name');
+    }
+  });
+</script>
 
 {% endblock %}

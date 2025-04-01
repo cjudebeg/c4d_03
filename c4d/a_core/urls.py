@@ -31,4 +31,5 @@ urlpatterns = [
     path('accounts/', include('allauth.account.urls')),
 
     path('__debug__/', include('debug_toolbar.urls')),
+
 ]

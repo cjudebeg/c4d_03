@@ -4,6 +4,9 @@
 {% block title %}My Profile{% endblock %}
 
 {% block layout %}
+<!-- Make sure HTMX is loaded in your base template or add it here -->
+<script src="https://unpkg.com/htmx.org@1.9.4"></script>
+
 <main class="max-w-4xl mx-auto p-8 bg-white mt-6 shadow">
   <h2 class="text-3xl font-bold mb-6">Profile</h2>
 
@@ -11,11 +14,9 @@
   <section class="mb-8 border border-gray-200 bg-gray-50 p-4">
     <h3 class="text-xl font-semibold mb-4">Personal Information</h3>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-y-1 gap-x-4 text-sm text-gray-700">
-      
       <p><strong>First Name:</strong> {{ profile.first_name|default:"Not provided." }}</p>
       <p><strong>Middle Name:</strong> {{ profile.middle_name|default:"Not provided." }}</p>
       <p><strong>Last Name:</strong> {{ profile.last_name|default:"Not provided." }}</p>
-      <!-- <p><strong>Date of Birth:</strong> {{ profile.date_of_birth|default:"Not provided." }}</p> -->
       <p>
         <strong>Location:</strong>
         {% if profile.state and profile.suburb %}
@@ -26,15 +27,18 @@
       </p>
       <p>
         <strong>Email:</strong>
-        {% if profile.user.email and profile.user.email|lower != "none" %}
-          {{ profile.user.email }}
-        {% else %}
-          Not provided.
-        {% endif %}
+        <span id="email-display">
+          {% if profile.user.email and profile.user.email|lower != "none" %}
+            {{ profile.user.email }}
+          {% else %}
+            Not provided.
+          {% endif %}
+        </span>
       </p>
       <p><strong>Security Clearance:</strong> {{ profile.clearance_level|default:"Not provided." }}</p>
       <p><strong>Clearance Number:</strong> {{ profile.clearance_no|default:"Not provided." }}</p>
-      <!-- <p><strong>Clearance Expiry:</strong> {{ profile.clearance_expiry|default:"Not provided." }}</p> -->
+      <p><strong>Clearance Revalidation:</strong> {% if profile.clearance_revalidation %}{{ profile.clearance_revalidation|date:"M d, Y" }}{% else %}Not provided{% endif %}</p>
+      <p><strong>Clearance Active:</strong> {% if profile.clearance_active %}Yes{% else %}No{% endif %}</p>
     </div>
   </section>
 
@@ -75,32 +79,75 @@
         <!-- Email Address & Edit -->
         <tr class="border-b">
           <th scope="row" class="pt-4 pb-2 text-base font-semibold text-gray-900">Email address</th>
-          <td id="email-address" class="pt-4 pb-2 pl-4">
+          <td id="email-address-display" class="pt-4 pb-2 pl-4">
             {% if user.email %}{{ user.email }}{% else %}No Email{% endif %}
           </td>
-          <td class="pt-4 pb-2 pl-4">
-            <!-- Link to /accounts/email/ -->
-            <a href="/accounts/email/" class="font-medium text-blue-600 hover:underline">
-              Edit email settings
-            </a>
+          <td class="pt-4 pb-2 pl-4" id="email-action-cell">
+            <!-- Simple button that shows/hides email form using plain JavaScript -->
+            <button 
+              type="button" 
+              onclick="toggleEmailForm()" 
+              id="change-email-btn" 
+              class="font-medium text-blue-600 hover:underline">
+              Change email
+            </button>
+          </td>
+        </tr>
+
+        <!-- Inline Email Form -->
+        <tr id="email-form-row" class="border-b" style="display: none;">
+          <th scope="row" class="py-4 text-base font-semibold text-gray-900"></th>
+          <td colspan="2" class="py-4 pl-4">
+            <form id="email-change-form" method="POST" action="{% url 'profile-emailchange' %}">
+              {% csrf_token %}
+              <div class="flex flex-col md:flex-row md:items-center gap-2">
+                <input 
+                  type="email" 
+                  name="email" 
+                  id="id_email" 
+                  placeholder="Enter new email address" 
+                  class="px-3 py-2 border border-gray-300 bg-white flex-grow"
+                  required
+                >
+                <div class="flex gap-2">
+                  <button 
+                    type="submit" 
+                    class="bg-blue-500 text-white px-4 py-2">
+                    Update
+                  </button>
+                  <button 
+                    type="button" 
+                    onclick="hideEmailForm()"
+                    class="bg-gray-500 text-white px-4 py-2">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+              <div id="email-form-message" class="mt-2"></div>
+            </form>
           </td>
         </tr>
 
         <!-- Email Verification -->
         <tr class="border-b">
           <th scope="row" class="pb-4 text-base font-semibold text-gray-900"></th>
-          <td class="pb-4 pl-4">
-            {% if user.emailaddress_set.first.verified %}
-              <span class="text-green-500">Verified</span>
-            {% else %}
-              <span class="text-amber-500">Not verified</span>
-            {% endif %}
+          <td id="verification-status-cell" class="pb-4 pl-4">
+            <span id="verification-status" class="{% if user.emailaddress_set.first.verified %}text-green-500{% else %}text-amber-500{% endif %}">
+              {% if user.emailaddress_set.first.verified %}
+                Verified
+              {% else %}
+                Not verified
+              {% endif %}
+            </span>
           </td>
-          <td class="pb-4 pl-4">
+          <td id="verification-action-cell" class="pb-4 pl-4">
             {% if not user.emailaddress_set.first.verified %}
-              <a href="{% url 'profile-emailverify' %}" class="font-medium text-blue-600 hover:underline">
-                Verify
-              </a>
+              <button 
+                type="button" 
+                onclick="sendVerificationEmail()" 
+                class="font-medium text-blue-600 hover:underline bg-transparent border-none p-0 cursor-pointer">
+                Send verification email
+              </button>
             {% endif %}
           </td>
         </tr>
@@ -114,7 +161,6 @@
             Update your login credentials.
           </td>
           <td class="pt-4 pb-2 pl-4">
-            <!-- Link to /accounts/password/change/ -->
             <a href="/accounts/password/change/" class="font-medium text-blue-600 hover:underline">
               Change
             </a>
@@ -147,4 +193,106 @@
     </a>
   </div>
 </main>
+
+<script>
+  // Simple JavaScript functions to handle email form visibility
+  function toggleEmailForm() {
+    document.getElementById('email-form-row').style.display = 'table-row';
+    document.getElementById('change-email-btn').style.display = 'none';
+  }
+  
+  function hideEmailForm() {
+    document.getElementById('email-form-row').style.display = 'none';
+    document.getElementById('change-email-btn').style.display = 'inline';
+    document.getElementById('email-form-message').innerHTML = '';
+    document.getElementById('email-change-form').reset();
+  }
+  
+  // Handle email change form submission
+  document.getElementById('email-change-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const messageDiv = document.getElementById('email-form-message');
+    
+    fetch('{% url "profile-emailchange" %}', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        messageDiv.innerHTML = `<div class="text-green-600">${data.message}</div>`;
+        
+        // Update displayed email
+        document.getElementById('email-address-display').textContent = data.email;
+        if (document.getElementById('email-display')) {
+          document.getElementById('email-display').textContent = data.email;
+        }
+        
+        // Update verification status
+        const verificationStatus = document.getElementById('verification-status');
+        verificationStatus.textContent = 'Not verified';
+        verificationStatus.className = 'text-amber-500';
+        
+        // Show the verification button if not already visible
+        const verificationCell = document.getElementById('verification-action-cell');
+        if (!verificationCell.querySelector('button')) {
+          verificationCell.innerHTML = `
+            <button 
+              type="button" 
+              onclick="sendVerificationEmail()" 
+              class="font-medium text-blue-600 hover:underline bg-transparent border-none p-0 cursor-pointer">
+              Send verification email
+            </button>
+          `;
+        }
+        
+        // Auto-hide form after success
+        setTimeout(hideEmailForm, 3000);
+      } else {
+        messageDiv.innerHTML = `<div class="text-red-600">${data.message}</div>`;
+      }
+    })
+    .catch(error => {
+      messageDiv.innerHTML = '<div class="text-red-600">An error occurred. Please try again.</div>';
+      console.error('Error:', error);
+    });
+  });
+  
+  // Handle verification email
+  function sendVerificationEmail() {
+    fetch('{% url "profile-emailverify" %}', {
+      method: 'POST',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRFToken': '{{ csrf_token }}'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      const verificationCell = document.getElementById('verification-action-cell');
+      const tempMessage = document.createElement('div');
+      tempMessage.className = 'text-green-600';
+      tempMessage.textContent = data.message;
+      
+      // Replace button with success message
+      const originalContent = verificationCell.innerHTML;
+      verificationCell.innerHTML = '';
+      verificationCell.appendChild(tempMessage);
+      
+      // Restore button after 3 seconds
+      setTimeout(() => {
+        verificationCell.innerHTML = originalContent;
+      }, 3000);
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Failed to send verification email. Please try again.');
+    });
+  }
+</script>
 {% endblock %}

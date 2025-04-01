@@ -59,15 +59,13 @@ class Profile(models.Model):
 
     clearance_level = models.CharField(max_length=20, choices=CLEARANCE_LEVEL_CHOICES, blank=True, null=True)
     clearance_no = models.CharField(max_length=50, blank=True, null=True)
-    clearance_expiry = models.DateField(blank=True, null=True)
-
-    # displayname = models.CharField(max_length=100, blank=True, null=True)
-
+    clearance_revalidation = models.DateField(blank=True, null=True)  # Previously clearance_expiry
+    clearance_active = models.BooleanField(default=False)  
 
     skill_sets = models.TextField(blank=True, null=True)
     skill_level = models.CharField(max_length=100, blank=True, null=True)
 
-    # field for tracking onboarding staus
+    # Field for tracking onboarding status
     onboarding_completed = models.BooleanField(default=False)
 
     def __str__(self):

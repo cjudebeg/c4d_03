@@ -133,10 +133,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 ]
 
-ACCOUNT_FORMS = {'signup': 'authentication.forms.CustomUserSignupForm'}
-
 ACCOUNT_FORMS = {
-    'add_email': 'authentication.forms.AddEmailForm', 
+    'signup': 'authentication.forms.CustomUserSignupForm',
+    'add_email': 'authentication.forms.AddEmailForm',
 }
 
 # Internationalisation settings
@@ -156,6 +155,18 @@ ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_SIGNUP_REDIRECT_URL = "/"
 LOGIN_REDIRECT_URL = "profile"
 ACCOUNT_LOGOUT_REDIRECT_URL = "account_login"
+ACCOUNT_UNIQUE_EMAIL = True
+
+ACCOUNT_CHANGE_EMAIL = True
+
+# ACCOUNT_SIGNUP_FORM_CLASS = "authentication.forms.CustomUserSignupForm"
+
+
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 7
+ACCOUNT_SIGNUP_EMAIL_ENTER_TWICE = False
+
+# Form errors will be presented as messages
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 
 # Email backend for development 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

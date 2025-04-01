@@ -10,41 +10,35 @@ from django.contrib.auth.views import redirect_to_login
 from .forms import ProfileUpdateForm, EmailForm, CustomUserSignupForm
 from .models import Profile
 from django.db import IntegrityError
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.http import require_POST
 
 # For mfa
 from django.core.mail import send_mail
 import random, string
 import time  
 
-# from .forms import CustomUserChangeForm, LoginForm
+from allauth.account.views import SignupView
+from .forms import CustomUserSignupForm
+from django.contrib import messages
 
-def register_view(request):
-    try:
-        if request.method == "POST":
-            form = CustomUserSignupForm(request.POST)
-            if form.is_valid():
-                form.save(request)
-                return redirect("login")
-            else:
-                print("Registration form errors:", form.errors)  
-        else:
-            form = CustomUserSignupForm()
-        return render(request, "register.html", {"form": form})
-    
-    except IntegrityError as e:  # Handles duplicate email issues
-        print(f"Database error: {e}")
-        form.add_error("email", "This email is already registered.")
-        return render(request, "register.html", {"form": form})
-    
-    except Exception as e:  # Catch-all for unexpected errors
-        print(f"Unexpected error in register_view: {e}")
-        return render(request, "register.html", {"form": form, "error": "Something went wrong. Please try again."})
+
+class CustomSignupView(SignupView):
+
+    form_class = CustomUserSignupForm
+    template_name = "account/signup.html" 
+
+    def form_invalid(self, form):
+        # add form errors to the messages
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, error)
+        return super().form_invalid(form)
 
 
 @login_required
 def mfa_setup(request):
-
-    existing_messages = list(messages.get_messages(request))  
+    existing_messages = list(messages.get_messages(request))
     filtered_messages = []
     for msg in existing_messages:
         if "successfully signed in" not in msg.message.lower():
@@ -76,7 +70,6 @@ def mfa_setup(request):
 
 @login_required
 def mfa_verify(request):
-
     now = int(time.time())
     if request.method == "POST":
         token = request.POST.get("token", "").strip()
@@ -115,7 +108,6 @@ def mfa_verify(request):
 
 @login_required
 def mfa_resend(request):
-
     now = int(time.time())
     code_generated = request.session.get("mfa_code_generated_at", 0)
     if now - code_generated < 60:
@@ -214,36 +206,66 @@ def profile_edit_view(request):
 
 @login_required
 def profile_emailchange(request):
-    if request.htmx:
-        form = EmailForm(instance=request.user)
-        return render(request, "partials/email_form.html", {"form": form})
-
+    # Handle email address changes with AJAX support
     if request.method == "POST":
-        form = EmailForm(request.POST, instance=request.user)
+        form = EmailForm(request.POST)
         if form.is_valid():
             email = form.cleaned_data["email"]
-            if (
-                settings.AUTH_USER_MODEL.objects.filter(email=email)
-                .exclude(id=request.user.id)
-                .exists()
-            ):
-                messages.warning(request, f"{email} is already in use.")
-                return redirect("profile-settings")
 
-            form.save()
-            send_email_confirmation(request, request.user)
-            return redirect("profile-settings")
+            # Check if the new email is the same as the current one
+            if request.user.email.lower() == email.lower():
+                return JsonResponse({
+                    'success': False,
+                    'message': "This is already your current email address."
+                })
+
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            from allauth.account.models import EmailAddress
+            # Check if the email is already in use by another account
+            if (User.objects.filter(email__iexact=email).exclude(id=request.user.id).exists() or
+                EmailAddress.objects.filter(email__iexact=email).exclude(user=request.user).exists()):
+                return JsonResponse({
+                    'success': False,
+                    'message': f"{email} is already in use by an account."
+                })
+
+            # Delete any existing EmailAddress objects for the user.
+            EmailAddress.objects.filter(user=request.user).delete()
+
+            # Update the users email.
+            user = request.user
+            user.email = email
+            user.save()
+
+            # Send email confirmation via allauth.
+            send_email_confirmation(request, user)
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Email updated! Verification email sent.',
+                'email': email
+            })
         else:
-            messages.warning(request, "Form not valid")
-            return redirect("profile-settings")
-
-    return redirect("home")
+            error_message = "Invalid email address."
+            if form.errors.get('email'):
+                error_message = form.errors['email'][0]
+            return JsonResponse({
+                'success': False,
+                'message': error_message
+            })
+    return redirect("profile")
 
 
 @login_required
+@require_POST
 def profile_emailverify(request):
+    # Send verification email and return JSON response
     send_email_confirmation(request, request.user)
-    return redirect("profile-settings")
+    return JsonResponse({
+        'success': True,
+        'message': 'Verification email sent.'
+    })
 
 
 @login_required
