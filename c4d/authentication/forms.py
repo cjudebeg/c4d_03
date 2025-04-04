@@ -91,7 +91,7 @@ class ProfileUpdateForm(ModelForm):
             "suburb": forms.TextInput(attrs={"placeholder": "Your Suburb"}),
             "date_of_birth": forms.DateInput(attrs={'type': 'date', 'placeholder': 'In DD/MM/YYYY format'}),
             "clearance_level": forms.Select(choices=CLEARANCE_LEVEL_CHOICES, attrs={"placeholder": "Select your Clearance Level"}),
-            "clearance_no": forms.TextInput(attrs={"placeholder": "Your CSID number"}),
+            "clearance_no": forms.TextInput(attrs={"placeholder": "Enter CSID number"}),
             "clearance_revalidation": forms.DateInput(attrs={'type': 'date', 'placeholder': 'Revalidation Date'}),
             "clearance_active": forms.CheckboxInput(),
         }

@@ -10,8 +10,16 @@
   <form method="post" action="{{ action_url }}">
     {% csrf_token %}
     {{ redirect_field }}
-    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4">
-      {% trans "Sign Out" %}
-    </button>
+    
+    <div class="flex items-center gap-4">
+      <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4">
+        {% trans "Sign Out" %}
+      </button>
+      <a href="javascript:history.back()" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4">
+        {% trans "Cancel" %}
+      </a>
+    </div>
   </form>
 {% endblock content %}
+
+
