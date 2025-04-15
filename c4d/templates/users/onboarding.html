@@ -1,239 +1,416 @@
-{% extends 'layouts/box.html' %}
+{% extends 'layouts/a_box.html' %}
 {% load static %}
 
 {% block content %}
+<div class="w-full">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  
+  <h2 class="text-2xl font-bold mb-6 lg:mb-10">
+    {% if onboarding %}Onboarding{% else %}Edit your Profile{% endif %}
+  </h2>
 
-{% if onboarding %}
-  <h2 class="text-2xl font-bold mb-6">Onboarding</h2>
-{% else %}
-  <h2 class="text-2xl font-bold mb-6">Edit your Profile</h2>
-{% endif %}
-
-<div class="text-center flex flex-col items-center mb-4">
-  <p class="mb-4 text-sm text-gray-600">
-    You have to complete the Onboarding in order to see the Job postings.
-  </p>
-  <div class="text-center max-w-md">
-      <h3 id="displayname" class="text-xl font-semibold mb-1">
-        {{ user.profile.displayname|default:"" }}
-      </h3>
-      <p class="text-gray-400 mb-2">
-        <strong id="current-email">
-          {% if user.email %}{{ user.email }}{% else %}Not provided{% endif %}
-        </strong>
-      </p>
-      <div class="flex items-center justify-center gap-2">
-        <!-- "Change Email" button toggles the inline email form -->
-        <button type="button" id="toggle-email-btn" onclick="toggleEmailInput()" class="text-xs bg-gray-200 text-gray-800 px-2 py-1 hover:bg-gray-300 transition">
-          Change Email
-        </button>
-        <!-- "Change Password" link -->
-        <a href="{% url 'account_change_password' %}" class="text-xs bg-gray-200 text-gray-800 px-2 py-1 hover:bg-gray-300 transition">
-          Change Password
-        </a>
-        <a href="{% url 'profile-delete' %}" class="text-xs bg-gray-200 text-red-500 px-2 py-1 hover:bg-gray-300 transition">
-          Delete Account
-        </a>
+  <!-- Account Section with Email Display and Inline Email Change -->
+  <div class="border-b border-t border-gray-200 py-6 my-6">
+    <div class="lg:grid lg:grid-cols-4 lg:gap-8">
+      <!-- Left Column: Section Title -->
+      <div class="col-span-1">
+        <h3 class="text-lg font-semibold mb-4 lg:mb-0">Account</h3>
       </div>
-  </div>
-</div>
-
-<!-- Inline Email Form (hidden by default) -->
-<div id="email-form-container" style="display: none;" class="max-w-md mx-auto mb-4">
-  <form id="email-change-form" method="POST" action="{% url 'profile-emailchange' %}">
-    {% csrf_token %}
-    <div class="flex flex-col md:flex-row md:items-center gap-2">
-      <input 
-        type="email" 
-        name="email" 
-        id="id_email" 
-        placeholder="Enter new email address" 
-        class="bg-gray-100 px-3 py-2 border border-gray-300 flex-grow" 
-        required>
-      <div class="flex gap-2">
-        <button type="submit" class="bg-blue-500 text-white px-4 py-2">
-          Update
-        </button>
-        <button type="button" onclick="hideEmailForm()" class="bg-gray-500 text-white px-4 py-2">
-          Cancel
-        </button>
-      </div>
-    </div>
-    <div id="email-form-message" class="mt-2 text-sm"></div>
-  </form>
-</div>
-<br/
->
-<form method="POST" enctype="multipart/form-data" class="space-y-6">
-    {% csrf_token %}
-
-    {% if onboarding %}
-      <!-- Onboarding fields -->
-      <div class="space-y-4">
-        <div>
-          {{ form.first_name.errors }}
-          <label for="id_first_name" class="block font-semibold mb-1">First Name</label>
-          {{ form.first_name }}
-        </div>
-        <div>
-          {{ form.middle_name.errors }}
-          <label for="id_middle_name" class="block font-semibold mb-1">Middle Name</label>
-          {{ form.middle_name }}
-        </div>
-        <div>
-          {{ form.last_name.errors }}
-          <label for="id_last_name" class="block font-semibold mb-1">Last Name</label>
-          {{ form.last_name }}
-        </div>
-        <div>
-          <label for="id_date_of_birth" class="block font-semibold mb-1">Date of Birth</label>
-          {{ form.date_of_birth }}
-        </div>
-        <div>
-          <label for="id_clearance_level" class="block font-semibold mb-1">Clearance Level</label>
-          {{ form.clearance_level }}
-        </div>
-        <div>
-          {{ form.clearance_no.errors }}
-          <label for="id_clearance_no" class="block font-semibold mb-1">CSID Number</label>
-          <div class="flex">
-            <div class="flex items-center justify-center px-4 h-full bg-gray-200 border border-gray-300">
-              <span class="text-gray-600">CS</span>
+      
+      <!-- Right Column: Account Details -->
+      <div class="col-span-3 mr-2 md:mr-[30px] lg:mr-[180px]">
+        <!-- Email Display Section -->
+        <div id="email-display-section" class="mb-4">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center space-x-2 md:space-x-4 lg:space-x-8">
+              <span id="current-email" class="text-gray-700">
+                {% if user.email %}{{ user.email }}{% else %}Not provided{% endif %}
+              </span>
+              <span id="verification-status"
+                class="{% if user.emailaddress_set.first and user.emailaddress_set.first.verified %}text-green-500{% else %}text-amber-500{% endif %}">
+                {% if user.emailaddress_set.first and user.emailaddress_set.first.verified %}
+                  Verified
+                {% else %}
+                  Not verified
+                {% endif %}
+              </span>
             </div>
-            {{ form.clearance_no }}
+            <!-- Toggle the email–change UI -->
+            <button 
+              type="button" 
+              id="toggle-email-btn" 
+              onclick="toggleEmailInput()" 
+              class="text-blue-600 hover:text-blue-800 font-medium text-sm"
+            >
+              Change email
+            </button>
+          </div>
+          
+          <!-- Verification Action If Needed -->
+          <div 
+            id="verification-action" 
+            class="{% if user.emailaddress_set.first and user.emailaddress_set.first.verified %}hidden{% else %}block{% endif %}"
+          >
+            <button 
+              type="button" 
+              onclick="sendVerificationEmail()" 
+              class="text-blue-600 hover:text-blue-800 font-medium text-sm bg-transparent border-none p-0 cursor-pointer"
+            >
+              Send verification email
+            </button>
           </div>
         </div>
         
-        <style>
-          /* Input field styles */
-          #id_first_name, #id_middle_name, #id_last_name {
-            width: 100%;
-            padding: 0.5rem;
-            outline: none;
-            height: 38px; 
-          }
-          
-          #id_first_name:focus, #id_middle_name:focus, #id_last_name:focus {
-            border-color: #3676de;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-          }
-          
-          /* CSID input field styles */
-          #id_clearance_no {
-            padding: 0.5rem;
-            width: 100%;
-            height: 38px;
-            outline: none;
-          }
-          
-          #id_clearance_no:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-          }
-          
-          /* Ensure the CS prefix has the same height as the input */
-          .flex > div.flex.items-center {
-            height: 38px;
-          }
-          
-          /* Placeholder style */
-          ::placeholder {
-            color: #141414; /* text-gray-400 */
-            opacity: 1;
-          }
-        </style>
+        <!-- Inline Email Change UI (NOT a nested form) -->
+        <div id="email-form-container" style="display: none;" class="mb-6">
+          {% csrf_token %}
+          <div class="flex flex-col space-y-2">
+            <input 
+              type="email" 
+              name="new_email" 
+              id="id_new_email" 
+              placeholder="Enter new email address" 
+              class="bg-white px-3 py-2 border border-gray-300 w-full" 
+              required
+            >
+            <div class="flex space-x-2">
+              <button 
+                type="button" 
+                id="email-change-submit" 
+                class="bg-blue-500 text-white px-4 py-2 text-sm"
+              >
+                Update
+              </button>
+              <button 
+                type="button" 
+                onclick="toggleEmailInput()" 
+                class="bg-gray-500 text-white px-4 py-2 border border-gray-300 text-sm"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+          <!-- The message area where the verification sent message appears in green -->
+          <div id="email-form-message" class="mt-2 text-sm"></div>
+        </div>
+        
+        <div class="flex justify-end">
+          <a 
+            href="{% url 'account_change_password' %}" 
+            class="text-blue-600 hover:text-blue-800 font-medium text-sm"
+          >
+            Change password
+          </a>
+        </div>
       </div>
-    {% else %}
-      {{ form.as_p }}
-    {% endif %}
-
-    <div class="mt-4 flex items-center gap-2">
-      <button type="submit" class="bg-blue-500 text-white py-2 px-4">
-        Submit
-      </button>
-      {% if onboarding %}
-        <a class="bg-gray-500 text-white py-2 px-4" href="{% url 'home' %}">
-          Skip for now
-        </a>
-      {% else %}
-        <a class="bg-gray-500 text-white py-2 px-4" href="{{ request.META.HTTP_REFERER }}">
-          Cancel
-        </a>
-      {% endif %}
     </div>
-</form>
+  </div>
+
+  <!-- Main Profile Update Form -->
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <!-- Personal Information Section -->
+    <div class="border-b border-gray-200 pb-6 mb-6">
+      <div class="lg:grid lg:grid-cols-4 lg:gap-8">
+        <!-- Left Column: Section Title and Note -->
+        <div class="col-span-1">
+          <h3 class="text-lg font-semibold mb-4 lg:mb-0">Personal</h3>
+          <p class="text-sm text-gray-700 mb-4 lg:mb-0">Full name required</p>
+        </div>
+        
+        <!-- Right Column: Form Fields -->
+        <div class="col-span-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label for="id_first_name" class="block text-sm font-medium text-gray-700 mb-1">
+                First name
+              </label>
+              <input 
+                type="text" 
+                name="first_name" 
+                id="id_first_name" 
+                placeholder="Enter first name" 
+                class="w-full bg-white px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                {% if form.first_name.value %}value="{{ form.first_name.value }}"{% endif %}
+                required
+              >
+              {% if form.first_name.errors %}
+                <div class="mt-1 text-red-600 text-sm">
+                  {{ form.first_name.errors }}
+                </div>
+              {% endif %}
+            </div>
+            
+            <div>
+              <label for="id_middle_name" class="block text-sm font-medium text-gray-700 mb-1">
+                Middle name
+              </label>
+              <input 
+                type="text" 
+                name="middle_name" 
+                id="id_middle_name" 
+                placeholder="Enter middle name" 
+                class="w-full bg-white px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                {% if form.middle_name.value %}value="{{ form.middle_name.value }}"{% endif %}
+              >
+              {% if form.middle_name.errors %}
+                <div class="mt-1 text-red-600 text-sm">
+                  {{ form.middle_name.errors }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label for="id_last_name" class="block text-sm font-medium text-gray-700 mb-1">
+                Last name
+              </label>
+              <input 
+                type="text" 
+                name="last_name" 
+                id="id_last_name" 
+                placeholder="Enter last name" 
+                class="w-full bg-white px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                {% if form.last_name.value %}value="{{ form.last_name.value }}"{% endif %}
+                required
+              >
+              {% if form.last_name.errors %}
+                <div class="mt-1 text-red-600 text-sm">
+                  {{ form.last_name.errors }}
+                </div>
+              {% endif %}
+            </div>
+            <div class="hidden md:block"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Clearance Section -->
+    <div class="pb-6 mb-6">
+      <div class="lg:grid lg:grid-cols-4 lg:gap-8">
+        <!-- Left Column: Section Title and Note -->
+        <div class="col-span-1">
+          <h3 class="text-lg font-semibold mb-4 lg:mb-0">Security Clearance</h3>
+          <p class="text-sm text-gray-700 mb-4 lg:mb-0">
+            If you cannot provide your Clearance Subject Identification number (CSID), your date of birth is required
+          </p>
+        </div>
+        
+        <!-- Right Column: Clearance Fields -->
+        <div class="col-span-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label for="id_clearance_no" class="block text-sm font-medium text-gray-700 mb-1">
+                CSID Number
+              </label>
+              <div class="flex">
+                <div class="flex items-center justify-center px-3 border border-gray-300 border-r-0">
+                  <span>CS</span>
+                </div>
+                <input 
+                  type="text" 
+                  name="clearance_no" 
+                  id="id_clearance_no" 
+                  placeholder="Enter numbers" 
+                  class="w-full bg-white px-3 py-2 border border-l-0 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  {% if form.clearance_no.value and form.clearance_no.value|slice:"0:2" == "CS" %}
+                    value="{{ form.clearance_no.value|slice:'2:' }}"
+                  {% elif form.clearance_no.value %}
+                    value="{{ form.clearance_no.value }}"
+                  {% endif %}
+                >
+              </div>
+              {% if form.clearance_no.errors %}
+                <div class="mt-1 text-red-600 text-sm">
+                  {{ form.clearance_no.errors }}
+                </div>
+              {% endif %}
+            </div>
+            <div>
+              <label for="id_clearance_level" class="block text-sm font-medium text-gray-700 mb-1">
+                AGSVA Level
+              </label>
+              <div class="relative">
+                <select 
+                  name="clearance_level" 
+                  id="id_clearance_level" 
+                  class="w-full bg-white px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                  required
+                >
+                  <option value="" {% if not form.clearance_level.value %}selected{% endif %}>
+                    Select clearance level
+                  </option>
+                  {% for value, label in form.fields.clearance_level.choices %}
+                    {% if value %}
+                      <option value="{{ value }}" {% if form.clearance_level.value == value %}selected{% endif %}>
+                        {{ label }}
+                      </option>
+                    {% endif %}
+                  {% endfor %}
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
+                  <i class="fa fa-chevron-down" aria-hidden="true"></i>
+                </div>
+              </div>
+              {% if form.clearance_level.errors %}
+                <div class="mt-1 text-red-600 text-sm">
+                  {{ form.clearance_level.errors }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="mt-6">
+            <label for="id_date_of_birth" class="block text-sm font-medium text-gray-700 mb-1">
+              Date of birth
+            </label>
+            <input 
+              type="date" 
+              name="date_of_birth" 
+              id="id_date_of_birth" 
+              placeholder="DD/MM/YYYY" 
+              class="w-full md:w-64 bg-white px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              {% if form.date_of_birth.value %}value="{{ form.date_of_birth.value|date:'Y-m-d' }}"{% endif %}
+            >
+            {% if form.date_of_birth.errors %}
+              <div class="mt-1 text-red-600 text-sm">
+                {{ form.date_of_birth.errors }}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Form Action Buttons -->
+        <div class="mt-6 flex flex-row flex-nowrap items-center space-x-2">
+          <button type="submit" class="bg-blue-500 text-white py-2 px-4 whitespace-nowrap">
+            Submit
+          </button>
+          {% if onboarding %}
+            <a class="bg-gray-500 text-white py-2 px-4 whitespace-nowrap" href="{% url 'home' %}">
+              Skip for now
+            </a>
+          {% else %}
+            <a class="bg-gray-500 text-white py-2 px-4 whitespace-nowrap" href="{{ request.META.HTTP_REFERER }}">
+              Cancel
+            </a>
+          {% endif %}
+          <a class="bg-white border border-red-500 text-red-500 py-2 px-4 whitespace-nowrap" style="margin-left: 80px;" href="{% url 'profile-delete' %}">
+            Delete
+          </a>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
 
 <script>
-  // Toggle the inline email form visibility.
+  // Global variable to hold the auto-close timer.
+  let emailCloseTimer = null;
+
+  // Toggle the visibility of the email change UI immediately.
   function toggleEmailInput() {
-    var container = document.getElementById('email-form-container');
-    var btn = document.getElementById('toggle-email-btn');
-    container.style.display = 'block';
-    btn.style.display = 'none';
+    // Clear any pending timer when toggling.
+    if (emailCloseTimer) {
+      clearTimeout(emailCloseTimer);
+      emailCloseTimer = null;
+    }
+    const container = document.getElementById('email-form-container');
+    const displaySection = document.getElementById('email-display-section');
+    
+    if (container.style.display === 'none' || container.style.display === '') {
+      container.style.display = 'block';
+      displaySection.style.display = 'none';
+    } else {
+      container.style.display = 'none';
+      displaySection.style.display = 'block';
+      // Immediately clear messages and input values.
+      document.getElementById('email-form-message').innerHTML = '';
+      document.getElementById('id_new_email').value = '';
+    }
   }
 
-  // Hide the email form and show the Change Email button.
-  function hideEmailForm() {
-    var container = document.getElementById('email-form-container');
-    var btn = document.getElementById('toggle-email-btn');
-    container.style.display = 'none';
-    btn.style.display = 'block';
-    document.getElementById('email-form-message').innerHTML = '';
-    document.getElementById('email-change-form').reset();
-  }
-
-  // Handle the email change form submission via AJAX.
-  document.getElementById('email-change-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    var formData = new FormData(this);
-    var messageDiv = document.getElementById('email-form-message');
+  // Handle the email change request via AJAX.
+  document.getElementById('email-change-submit').addEventListener('click', function(e) {
+    const emailValue = document.getElementById('id_new_email').value;
+    const messageDiv = document.getElementById('email-form-message');
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    const formData = new FormData();
+    formData.append('email', emailValue);
     
     fetch("{% url 'profile-emailchange' %}", {
       method: 'POST',
       body: formData,
       headers: {
-        'X-Requested-With': 'XMLHttpRequest'
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRFToken': csrfToken
       }
     })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        messageDiv.innerHTML = `<div class="text-green-600">${data.message}</div>`;
-        // Update the displayed email.
-        document.getElementById('current-email').textContent = data.email;
-        // Auto-hide the email form after success.
-        setTimeout(hideEmailForm, 3000);
-      } else {
-        messageDiv.innerHTML = `<div class="text-red-600">${data.message}</div>`;
-      }
-    })
-    .catch(error => {
-      messageDiv.innerHTML = '<div class="text-red-600">An error occurred. Please try again.</div>';
-      console.error('Error:', error);
-    });
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Display the verification message in green text at the bottom.
+          messageDiv.innerHTML = `<div class="text-green-600">${data.message}</div>`;
+          // Update the displayed email and verification status immediately.
+          document.getElementById('current-email').textContent = data.email;
+          const verificationStatus = document.getElementById('verification-status');
+          verificationStatus.textContent = 'Not verified';
+          verificationStatus.className = 'text-amber-500';
+          // Also ensure the "Send verification email" button is visible.
+          document.getElementById('verification-action').classList.remove('hidden');
+          // Auto-close the email change UI after 4 seconds.
+          emailCloseTimer = setTimeout(() => {
+            toggleEmailInput();
+            emailCloseTimer = null;
+          }, 4000);
+        } else {
+          messageDiv.innerHTML = `<div class="text-red-600">${data.message}</div>`;
+        }
+      })
+      .catch(error => {
+        messageDiv.innerHTML = '<div class="text-red-600">An error occurred. Please try again.</div>';
+        console.error('Error:', error);
+      });
   });
   
-  // Optional: Update display name dynamically if using a display name field.
-  const displayNameInput = document.getElementById('id_displayname');
-  const displayNameOutput = document.getElementById('displayname');
-  if (displayNameInput && displayNameOutput) {
-    displayNameInput.addEventListener('input', (event) => {
-      displayNameOutput.innerText = event.target.value;
-    });
+  // Handle sending a verification email.
+  function sendVerificationEmail() {
+    fetch('{% url "profile-emailverify" %}', {
+      method: 'POST',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRFToken': '{{ csrf_token }}'
+      }
+    })
+      .then(response => response.json())
+      .then(data => {
+        const verificationAction = document.getElementById('verification-action');
+        const tempMessage = document.createElement('div');
+        tempMessage.className = 'text-green-600 text-sm';
+        tempMessage.textContent = data.message;
+        const originalContent = verificationAction.innerHTML;
+        verificationAction.innerHTML = '';
+        verificationAction.appendChild(tempMessage);
+        setTimeout(() => {
+          verificationAction.innerHTML = originalContent;
+        }, 3000);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to send verification email. Please try again.');
+      });
   }
-  
-  // Set placeholders for name fields
+
+  // Set placeholders for name fields on DOM load.
   document.addEventListener('DOMContentLoaded', function() {
-    if (document.getElementById('id_first_name')) {
-      document.getElementById('id_first_name').setAttribute('placeholder', 'Enter first name');
-    }
-    if (document.getElementById('id_middle_name')) {
-      document.getElementById('id_middle_name').setAttribute('placeholder', 'Enter middle name');
-    }
-    if (document.getElementById('id_last_name')) {
-      document.getElementById('id_last_name').setAttribute('placeholder', 'Enter last name');
-    }
+    const firstName = document.getElementById('id_first_name');
+    if (firstName) { firstName.placeholder = 'Enter first name'; }
+    const middleName = document.getElementById('id_middle_name');
+    if (middleName) { middleName.placeholder = 'Enter middle name'; }
+    const lastName = document.getElementById('id_last_name');
+    if (lastName) { lastName.placeholder = 'Enter last name'; }
   });
 </script>
-
 {% endblock %}

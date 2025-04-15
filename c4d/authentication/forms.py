@@ -159,7 +159,7 @@ class ProfileUpdateForm(ModelForm):
         dob = cleaned_data.get("date_of_birth")
         clearance_no = cleaned_data.get("clearance_no")
         if not dob and not clearance_no:
-            raise forms.ValidationError("Please enter either your Date of Birth or a Clearance Number.")
+            raise forms.ValidationError("Please enter either your valid Clearance Number or Date of Birth.")
         return cleaned_data
 
 class EmailForm(forms.Form):
