@@ -1,269 +1,562 @@
-{% extends 'base.html' %}
+{% extends 'layouts/b_box.html' %}
+{% load custom_filters %}
 {% load static %}
 
-{% block title %}My Profile{% endblock %}
+{% block content %}
+<div class="w-full">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-{% block layout %}
-<!-- Make sure HTMX is loaded in your base template or add it here -->
-<script src="https://unpkg.com/htmx.org@1.9.4"></script>
+  <!-- Alpine.js scripts - CRITICALLY IMPORTANT: Core MUST load LAST, after all plugins -->
+  <script defer src="https://unpkg.com/@alpinejs/ui@3.14.9/dist/cdn.min.js"></script>
+  <script defer src="https://unpkg.com/@alpinejs/focus@3.14.9/dist/cdn.min.js"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.14.9/dist/cdn.min.js"></script>
 
-<main class="max-w-4xl mx-auto p-8 bg-white mt-6 shadow">
-  <h2 class="text-3xl font-bold mb-6">Profile</h2>
+  <!-- Tippy.js for tooltips -->
+  <script src="https://unpkg.com/@popperjs/core@2"></script>
+  <script src="https://unpkg.com/tippy.js@6"></script>
 
-  <!-- Personal Info -->
-  <section class="mb-8 border border-gray-200 bg-gray-50 p-4">
-    <h3 class="text-xl font-semibold mb-4">Personal Information</h3>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-y-1 gap-x-4 text-sm text-gray-700">
-      <p><strong>First Name:</strong> {{ profile.first_name|default:"Not provided." }}</p>
-      <p><strong>Middle Name:</strong> {{ profile.middle_name|default:"Not provided." }}</p>
-      <p><strong>Last Name:</strong> {{ profile.last_name|default:"Not provided." }}</p>
-      <p>
-        <strong>Location:</strong>
-        {% if profile.state and profile.suburb %}
-          {{ profile.suburb }}, {{ profile.state }}
-        {% else %}
-          Not provided.
-        {% endif %}
-      </p>
-      <p>
-        <strong>Email:</strong>
-        <span id="email-display">
-          {% if profile.user.email and profile.user.email|lower != "none" %}
-            {{ profile.user.email }}
+  <!-- ESSENTIAL: x-cloak CSS definition must be present -->
+  <style>
+    [x-cloak] { display: none !important; }
+    
+    /* Text truncation styles */
+    .text-truncate {
+      max-width: 240px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: inline-block;
+    }
+    
+    @media (min-width: 640px) {
+      .text-truncate {
+        max-width: 320px;
+      }
+    }
+    
+    @media (min-width: 768px) {
+      .text-truncate {
+        max-width: 380px;
+      }
+    }
+  </style>
+
+  <!-- Tooltip initialization script -->
+  <script>
+    document.addEventListener('alpine:init', () => {
+      // Magic: $tooltip
+      Alpine.magic('tooltip', el => message => {
+        let instance = tippy(el, { content: message, trigger: 'manual' });
+        instance.show();
+        setTimeout(() => {
+          instance.hide();
+          setTimeout(() => instance.destroy(), 150);
+        }, 2000);
+      });
+      // Directive: x-tooltip
+      Alpine.directive('tooltip', (el, { expression }) => {
+        tippy(el, { content: expression });
+      });
+    });
+  </script>
+
+  <h2 class="text-2xl font-bold mb-6 lg:mb-10">Profile</h2>
+
+  <!-- ===================== ACCOUNT SECTION (Email Update) ===================== -->
+  <div class="border-b py-4 w-full">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="font-semibold text-lg">Account</h3>
+      <button 
+        type="button" 
+        id="toggle-email-btn" 
+        onclick="toggleEmailInput()" 
+        class="text-blue-600 font-medium hover:underline"
+      >
+        EDIT
+      </button>
+    </div>
+    
+    <!-- Email Display Section -->
+    <div id="email-display-section" class="mb-4">
+      <div class="flex flex-col">
+        <span id="current-email" class="text-gray-700 text-truncate" title="{% if user.email %}{{ user.email }}{% else %}Not provided{% endif %}">
+          {% if user.email %}{{ user.email }}{% else %}Not provided{% endif %}
+        </span>
+        <span id="verification-status" 
+          class="{% if user.emailaddress_set.first and user.emailaddress_set.first.verified %}text-green-500{% else %}text-amber-500{% endif %} mt-1">
+          {% if user.emailaddress_set.first and user.emailaddress_set.first.verified %}
+            Verified
           {% else %}
-            Not provided.
+            Not verified
           {% endif %}
         </span>
-      </p>
-      <p><strong>Security Clearance:</strong> {{ profile.clearance_level|default:"Not provided." }}</p>
-      <p><strong>Clearance Number:</strong> {{ profile.clearance_no|default:"Not provided." }}</p>
-      <p><strong>Clearance Revalidation:</strong> {% if profile.clearance_revalidation %}{{ profile.clearance_revalidation|date:"M d, Y" }}{% else %}Not provided{% endif %}</p>
-      <p><strong>Clearance Active:</strong> {% if profile.clearance_active %}Yes{% else %}No{% endif %}</p>
+      </div>
+      
+      <!-- Verification Action if Needed -->
+      <div 
+        id="verification-action" 
+        class="{% if user.emailaddress_set.first and user.emailaddress_set.first.verified %}hidden{% else %}block{% endif %} mt-2"
+      >
+        <button 
+          type="button" 
+          onclick="sendVerificationEmail()" 
+          class="text-blue-600 hover:text-blue-800 font-medium text-sm bg-transparent border-none p-0 cursor-pointer"
+        >
+          Send verification email
+        </button>
+      </div>
     </div>
-  </section>
-
-  <!-- Additional Info Section -->
-  <section class="mb-8 border border-gray-200 bg-gray-50 p-4">
-    <h3 class="text-xl font-semibold mb-4">Additional Information</h3>
-    <div class="text-sm text-gray-700 space-y-2">
-      <p>
-        <strong>Skill Sets:</strong>
-        {% if profile.skill_sets %}
-          {{ profile.skill_sets }}
-        {% else %}
-          Not provided.
-        {% endif %}
-      </p>
-      <p>
-        <strong>Skill Level:</strong>
-        {% if profile.skill_level %}
-          {{ profile.skill_level }}
-        {% else %}
-          Not provided.
-        {% endif %}
-      </p>
-      {% if profile.info %}
-        <div class="mt-4">
-          <strong>Bio/Info:</strong>
-          <div class="mt-2 hyphens-auto">{{ profile.info|linebreaksbr }}</div>
+    
+    <!-- Inline Email Change UI -->
+    <div id="email-form-container" style="display: none;" class="mb-6">
+      {% csrf_token %}
+      <div class="flex flex-col space-y-2">
+        <input 
+          type="email" 
+          name="new_email" 
+          id="id_new_email" 
+          placeholder="Enter new email address" 
+          class="bg-white px-3 py-2 border border-gray-300 w-full" 
+          required
+        >
+        <div class="flex space-x-2">
+          <button 
+            type="button" 
+            id="email-change-submit" 
+            class="bg-blue-500 text-white px-4 py-2 text-sm"
+          >
+            Update
+          </button>
+          <button 
+            type="button" 
+            onclick="toggleEmailInput()" 
+            class="bg-gray-500 text-white px-4 py-2 border border-gray-300 text-sm"
+          >
+            Cancel
+          </button>
         </div>
-      {% endif %}
+      </div>
+      <!-- Message area for update feedback -->
+      <div id="email-form-message" class="mt-2 text-sm"></div>
     </div>
-  </section>
+    <div class="flex">
+      <a href="{% url 'account_change_password' %}" class="text-blue-600 hover:text-blue-800 font-medium text-sm">
+        Change password
+      </a>
+    </div>
+  </div>
 
-  <!-- Account Settings Section -->
-  <section class="mb-8 border border-gray-200 bg-gray-50 p-4">
-    <h3 class="text-xl font-semibold mb-4">Account Settings</h3>
-    <table class="w-full text-sm text-left text-gray-600">
-      <tbody>
-        <!-- Email Address & Edit -->
-        <tr class="border-b">
-          <th scope="row" class="pt-4 pb-2 text-base font-semibold text-gray-900">Email address</th>
-          <td id="email-address-display" class="pt-4 pb-2 pl-4">
-            {% if user.email %}{{ user.email }}{% else %}No Email{% endif %}
-          </td>
-          <td class="pt-4 pb-2 pl-4" id="email-action-cell">
-            <!-- Simple button that shows/hides email form using plain JavaScript -->
-            <button 
-              type="button" 
-              onclick="toggleEmailForm()" 
-              id="change-email-btn" 
-              class="font-medium text-blue-600 hover:underline">
-              Change email
-            </button>
-          </td>
-        </tr>
+  <!-- ===================== PERSONAL SECTION ===================== -->
+  <div class="border-b py-4 w-full">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="font-semibold text-lg">Personal</h3>
+      <button 
+        type="button" 
+        id="personal-edit-btn"
+        onclick="toggleSection('personal')" 
+        class="text-blue-600 font-medium hover:underline"
+      >
+        EDIT
+      </button>
+    </div>
+    
+    <div id="personal-display">
+      <div class="text-gray-700">
+        {% if profile.first_name %}{{ profile.first_name }}{% else %}Not provided{% endif %}
+        {% if profile.middle_name %} {{ profile.middle_name }}{% endif %}
+        {% if profile.last_name %} {{ profile.last_name }}{% else %}Not provided{% endif %}
+      </div>
+      <div class="text-gray-700 mt-1">
+        {% if profile.state %}
+          {% if profile.suburb %}{{ profile.suburb }}, {% endif %}
+          {% if profile.state == "NSW" %}New South Wales
+          {% elif profile.state == "VIC" %}Victoria
+          {% elif profile.state == "QLD" %}Queensland
+          {% elif profile.state == "WA" %}Western Australia
+          {% elif profile.state == "SA" %}South Australia
+          {% elif profile.state == "TAS" %}Tasmania
+          {% elif profile.state == "NT" %}Northern Territory
+          {% elif profile.state == "ACT" %}Australian Capital Territory
+          {% else %}{{ profile.state }}
+          {% endif %}
+        {% else %}
+          No location
+        {% endif %}
+      </div>
+    </div>
+  </div>
 
-        <!-- Inline Email Form -->
-        <tr id="email-form-row" class="border-b" style="display: none;">
-          <th scope="row" class="py-4 text-base font-semibold text-gray-900"></th>
-          <td colspan="2" class="py-4 pl-4">
-            <form id="email-change-form" method="POST" action="{% url 'profile-emailchange' %}">
-              {% csrf_token %}
-              <div class="flex flex-col md:flex-row md:items-center gap-2">
-                <input 
-                  type="email" 
-                  name="email" 
-                  id="id_email" 
-                  placeholder="Enter new email address" 
-                  class="px-3 py-2 border border-gray-300 bg-white flex-grow"
-                  required
-                >
-                <div class="flex gap-2">
-                  <button 
-                    type="submit" 
-                    class="bg-blue-500 text-white px-4 py-2">
-                    Update
-                  </button>
-                  <button 
-                    type="button" 
-                    onclick="hideEmailForm()"
-                    class="bg-gray-500 text-white px-4 py-2">
-                    Cancel
-                  </button>
-                </div>
-              </div>
-              <div id="email-form-message" class="mt-2"></div>
-            </form>
-          </td>
-        </tr>
+  <!-- Personal Inline Form -->
+  <form id="personal-form" action="{% url 'profile_update_personal' %}" method="POST" style="display: none;" class="border-b py-4">
+    {% csrf_token %}
+    <div class="mb-3 font-semibold text-lg">Edit Personal Information</div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div>
+        <label for="id_first_name_personal" class="block text-sm font-medium text-gray-700">
+          First name
+        </label>
+        <input type="text" name="first_name" id="id_first_name_personal" class="w-full border border-gray-300 px-3 py-2 bg-gray-200" value="{{ profile.first_name|default_if_none:'' }}" placeholder="Enter your first name" required>
+      </div>
+      <div>
+        <label for="id_last_name_personal" class="block text-sm font-medium text-gray-700">
+          Last name
+        </label>
+        <input type="text" name="last_name" id="id_last_name_personal" class="w-full border border-gray-300 px-3 py-2 bg-gray-200" value="{{ profile.last_name|default_if_none:'' }}" placeholder="Enter your last name" required>
+      </div>
+      <div>
+        <label for="id_suburb" class="block text-sm font-medium text-gray-700">
+          Suburb
+        </label>
+        <input type="text" name="suburb" id="id_suburb" class="w-full border border-gray-300 px-3 py-2 bg-gray-200" value="{{ profile.suburb|default_if_none:'' }}" placeholder="Enter your suburb">
+      </div>
+      <div>
+        <label for="id_state" class="block text-sm font-medium text-gray-700">
+          State
+        </label>
+        <select name="state" id="id_state" class="w-full border border-gray-300 px-3 py-2 bg-gray-200">
+          <option value="">Select State</option>
+          <option value="New South Wales" {% if profile.state == "NSW" or profile.state == "New South Wales" %}selected{% endif %}>New South Wales</option>
+          <option value="Victoria" {% if profile.state == "VIC" or profile.state == "Victoria" %}selected{% endif %}>Victoria</option>
+          <option value="Queensland" {% if profile.state == "QLD" or profile.state == "Queensland" %}selected{% endif %}>Queensland</option>
+          <option value="Western Australia" {% if profile.state == "WA" or profile.state == "Western Australia" %}selected{% endif %}>Western Australia</option>
+          <option value="South Australia" {% if profile.state == "SA" or profile.state == "South Australia" %}selected{% endif %}>South Australia</option>
+          <option value="Tasmania" {% if profile.state == "TAS" or profile.state == "Tasmania" %}selected{% endif %}>Tasmania</option>
+          <option value="Northern Territory" {% if profile.state == "NT" or profile.state == "Northern Territory" %}selected{% endif %}>Northern Territory</option>
+          <option value="Australian Capital Territory" {% if profile.state == "ACT" or profile.state == "Australian Capital Territory" %}selected{% endif %}>Australian Capital Territory</option>
+        </select>
+      </div>
+    </div>
+    <div class="flex space-x-2">
+      <button type="submit" class="bg-blue-500 text-white px-4 py-2">Save</button>
+      <button type="button" onclick="toggleSection('personal', true)" class="bg-gray-500 text-white px-4 py-2">Cancel</button>
+    </div>
+  </form>
 
-        <!-- Email Verification -->
-        <tr class="border-b">
-          <th scope="row" class="pb-4 text-base font-semibold text-gray-900"></th>
-          <td id="verification-status-cell" class="pb-4 pl-4">
-            <span id="verification-status" class="{% if user.emailaddress_set.first.verified %}text-green-500{% else %}text-amber-500{% endif %}">
-              {% if user.emailaddress_set.first.verified %}
-                Verified
+  <!-- ===================== SECURITY CLEARANCE SECTION ===================== -->
+  <div class="border-b py-4 w-full">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="font-semibold text-lg">Security Clearance</h3>
+      <button 
+        type="button" 
+        id="security-edit-btn"
+        onclick="toggleSection('security')" 
+        class="text-blue-600 font-medium hover:underline"
+      >
+        EDIT
+      </button>
+    </div>
+    
+    <div id="security-display">
+      <div class="text-gray-700">
+        <span class="text-truncate" title="{% if profile.clearance_no %}{{ profile.clearance_no }}{% else %}No CSID{% endif %}">
+          {% if profile.clearance_no %}{{ profile.clearance_no }}{% else %}No CSID{% endif %}
+        </span>
+      </div>
+      <div class="text-gray-700 mt-1">
+        {% if profile.clearance_level %}{{ profile.clearance_level }}{% else %}No level{% endif %}
+        {% if profile.clearance_active %}
+          <span class="ml-2 text-orange-500">Active</span>
+        {% endif %}
+      </div>
+      <div class="text-gray-700 mt-1">
+        {% if profile.clearance_revalidation %}
+          Re-validation date: {{ profile.clearance_revalidation|date:"d/m/Y" }}
+        {% else %}
+          No re-validation date
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Inline Security Clearance Form -->
+  <form id="security-form" action="{% url 'profile_update_security' %}" method="POST" style="display: none;" class="border-b py-4">
+    {% csrf_token %}
+    <div class="mb-3 font-semibold text-lg">Edit Clearance</div>
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700">CSID Number</label>
+      <input type="text" class="w-full border border-gray-300 px-3 py-2 bg-gray-200" value="{% if profile.clearance_no %} {{ profile.clearance_no }}{% else %}Not provided{% endif %}" placeholder="Your CSID number" readonly>
+    </div>
+    <div class="mb-4">
+      <label for="id_clearance_level" class="block text-sm font-medium text-gray-700">AGSVA Level</label>
+      <select name="clearance_level" id="id_clearance_level" class="w-full border border-gray-300 px-3 py-2 bg-gray-200" required>
+        <option value="" {% if not profile.clearance_level %}selected{% endif %}>Select security clearance level</option>
+        <option value="Baseline" {% if profile.clearance_level == "Baseline" %}selected{% endif %}>Baseline</option>
+        <option value="NV1" {% if profile.clearance_level == "NV1" %}selected{% endif %}>NV1</option>
+        <option value="NV2" {% if profile.clearance_level == "NV2" %}selected{% endif %}>NV2</option>
+        <option value="PV" {% if profile.clearance_level == "PV" %}selected{% endif %}>PV</option>
+      </select>
+    </div>
+    <div class="flex space-x-2">
+      <button type="submit" class="bg-blue-500 text-white px-4 py-2">Save</button>
+      <button type="button" onclick="toggleSection('security', true)" class="bg-gray-500 text-white px-4 py-2">Cancel</button>
+    </div>
+  </form>
+
+  <!-- ===================== SKILLS SECTION ===================== -->
+  <div class="border-b py-4 w-full">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="font-semibold text-lg">Skills</h3>
+      <button 
+        type="button" 
+        id="skills-edit-btn"
+        onclick="toggleSection('skills')" 
+        class="text-blue-600 font-medium hover:underline"
+      >
+        EDIT
+      </button>
+    </div>
+    
+    <div id="skills-display">
+      <div class="text-gray-700">
+        <span class="text-truncate" title="{% if profile.skill_sets %}{{ profile.skill_sets }}{% else %}No skills selected{% endif %}">
+          {% if profile.skill_sets %}
+            {% with skill_list=profile.skill_sets|split:", " %}
+              {% if skill_list|length > 1 %}
+                {{ skill_list.0 }} and {{ skill_list|length|add:"-1" }} more
               {% else %}
-                Not verified
+                {{ skill_list.0 }}
               {% endif %}
-            </span>
-          </td>
-          <td id="verification-action-cell" class="pb-4 pl-4">
-            {% if not user.emailaddress_set.first.verified %}
-              <button 
-                type="button" 
-                onclick="sendVerificationEmail()" 
-                class="font-medium text-blue-600 hover:underline bg-transparent border-none p-0 cursor-pointer">
-                Send verification email
-              </button>
-            {% endif %}
-          </td>
-        </tr>
+            {% endwith %}
+          {% else %}
+            No skills selected
+          {% endif %}
+        </span>
+      </div>
+      <div class="text-gray-700 mt-1">
+        {% if profile.skill_level %}{{ profile.skill_level }}{% else %}No skill level{% endif %}
+      </div>
+    </div>
+  </div>
 
-        <!-- Change Password -->
-        <tr class="border-b">
-          <th scope="row" class="pt-4 pb-2 text-base font-semibold text-gray-900">
-            Change Password
-          </th>
-          <td class="pt-4 pb-2 pl-4">
-            Update your login credentials.
-          </td>
-          <td class="pt-4 pb-2 pl-4">
-            <a href="/accounts/password/change/" class="font-medium text-blue-600 hover:underline">
-              Change
-            </a>
-          </td>
-        </tr>
+  <!-- Inline Skills Form with Alpine.js Listbox for multi-select -->
+  <form id="skills-form" action="{% url 'profile_update_skills' %}" method="POST" style="display: none;" class="py-4 w-full">
+    {% csrf_token %}
+    <div class="mb-3 font-semibold text-lg">Edit Skills</div>
+    <div class="flex items-center mb-2">
+      <span class="text-sm font-medium text-gray-700">Skills</span>
+      <span x-data x-tooltip="Select all relevant specialisations" class="ml-2 text-blue-500 cursor-pointer text-sm font-bold">(i)</span>
+    </div>
+    
+    <!-- Alpine.js Multi-select Implementation -->
+    <div x-data="{
+        open: false,
+        values: [],
+        industries: [
+          { id: 1, name: 'Business Process & Improvement' },
+          { id: 2, name: 'Change & Transition Management' },
+          { id: 3, name: 'Commercial & Procurement' },
+          { id: 4, name: 'Configuration & Data Management' },
+          { id: 5, name: 'Consulting & Advisory' },
+          { id: 6, name: 'HR & Workforce' },
+          { id: 7, name: 'Logistics & Supply Chain' },
+          { id: 8, name: 'Project & Program Management' },
+          { id: 9, name: 'Quality, Certification & Audit' },
+          { id: 10, name: 'Risk, Cost & Financial Analysis' },
+          { id: 11, name: 'Specialist - Aviation & Space' },
+          { id: 12, name: 'Specialist - Training & Development' }
+        ],
+        get selectedDisplay() {
+          if (this.values.length === 0) {
+            return 'Choose skills...';
+          }
+          return this.values.length === 1 ? this.values[0].name : `${this.values.length} selected`;
+        },
+        init() {
+          const initialSkills = '{{ profile.skill_sets|default_if_none:""|escapejs }}';
+          if (initialSkills && initialSkills.trim() !== '') {
+            const skillArr = initialSkills.split(',').map(s => s.trim());
+            this.values = this.industries.filter(ind => skillArr.includes(ind.name));
+          }
+        },
+        isSelected(industry) {
+          return this.values.some(val => val.id === industry.id);
+        },
+        toggle(industry) {
+          const index = this.values.findIndex(val => val.id === industry.id);
+          if (index === -1) {
+            this.values.push(industry);
+          } else {
+            this.values.splice(index, 1);
+          }
+        }
+      }" x-init="init()" class="relative w-full">
+      <button type="button" @click="open = !open" class="w-full flex items-center justify-between gap-2 border border-gray-300 bg-gray-200 px-3 py-2">
+        <span x-text="selectedDisplay" class="text-black"></span>
+        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+        </svg>
+      </button>
+      <div x-show="open" @click.away="open = false" x-cloak class="absolute z-10 mt-1 w-full bg-white shadow-lg border border-gray-300 max-h-60 overflow-y-auto">
+        <ul class="py-1">
+          <template x-for="industry in industries" :key="industry.id">
+            <li @click="toggle(industry); $event.stopPropagation()" :class="{ 'bg-blue-50': isSelected(industry) }" class="px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center">
+              <div class="mr-2 h-5 w-5 flex items-center justify-center border" :class="isSelected(industry) ? 'bg-blue-500 border-blue-500' : 'border-gray-300'">
+                <svg x-show="isSelected(industry)" class="h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <span x-text="industry.name"></span>
+            </li>
+          </template>
+        </ul>
+      </div>
+      <template x-for="item in values" :key="item.id">
+        <input type="hidden" name="skill_sets_multiple" :value="item.name" />
+      </template>
+    </div>
+    <div class="mt-4">
+      <label for="id_skill_level" class="block text-sm font-medium text-gray-700 mb-1">
+        Skill Level
+      </label>
+      <select name="skill_level" id="id_skill_level" class="w-full border border-gray-300 px-3 py-2 bg-gray-200">
+        <option value="">Select experience level</option>
+        <option value="Junior" {% if profile.skill_level == "Junior" %}selected{% endif %}>Junior</option>
+        <option value="Mid" {% if profile.skill_level == "Mid" %}selected{% endif %}>Mid</option>
+        <option value="Senior" {% if profile.skill_level == "Senior" %}selected{% endif %}>Senior</option>
+      </select>
+    </div>
+    <div class="flex space-x-2 mt-4">
+      <button type="submit" class="bg-blue-500 text-white px-4 py-2">Save</button>
+      <button type="button" onclick="toggleSection('skills', true)" class="bg-gray-500 text-white px-4 py-2">Cancel</button>
+    </div>
+  </form>
 
-        <!-- Delete Account -->
-        <tr>
-          <th scope="row" class="py-4 text-base font-semibold text-gray-900">Delete Account</th>
-          <td class="py-4 pl-4">
-            Once deleted, your account is gone forever.
-          </td>
-          <td class="py-4 pl-4">
-            <a href="{% url 'profile-delete' %}" class="font-medium text-red-600 hover:underline">
-              Delete
-            </a>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
-
-  <div class="mt-6 flex gap-4">
-    <a href="{% url 'profile-edit' %}">
-      <button class="bg-blue-500 text-white py-2 px-4">Edit Profile</button>
-    </a>
-
-    <a href="{% url 'account_logout' %}" class="bg-gray-500 text-white py-2 px-4">
-      Logout
+  <!-- Final Row: Delete Account (left aligned) -->
+  <div class="mt-6 text-left">
+    <a href="{% url 'profile-delete' %}" class="bg-white border border-red-500 text-red-500 py-2 px-4 inline-block">
+      Delete Account
     </a>
   </div>
-</main>
+</div>
 
 <script>
-  // Simple JavaScript functions to handle email form visibility
-  function toggleEmailForm() {
-    document.getElementById('email-form-row').style.display = 'table-row';
-    document.getElementById('change-email-btn').style.display = 'none';
-  }
+  // Variable to track currently open section
+  let currentOpenSection = null;
   
-  function hideEmailForm() {
-    document.getElementById('email-form-row').style.display = 'none';
-    document.getElementById('change-email-btn').style.display = 'inline';
-    document.getElementById('email-form-message').innerHTML = '';
-    document.getElementById('email-change-form').reset();
-  }
-  
-  // Handle email change form submission
-  document.getElementById('email-change-form').addEventListener('submit', function(e) {
-    e.preventDefault();
+  // Function to toggle sections (used for Personal, Security, Skills)
+  function toggleSection(section, cancel = false) {
+    // If canceling, just close the current section
+    if (cancel) {
+      const formElem = document.getElementById(section + "-form");
+      const displayElem = document.getElementById(section + "-display");
+      const editBtn = document.getElementById(section + "-edit-btn");
+      
+      if (formElem) formElem.style.display = "none";
+      if (displayElem) displayElem.style.display = "block";
+      if (editBtn) editBtn.style.display = "block";
+      
+      currentOpenSection = null;
+      return;
+    }
     
-    const formData = new FormData(this);
+    // First, close any open section
+    if (currentOpenSection && currentOpenSection !== section) {
+      const openFormElem = document.getElementById(currentOpenSection + "-form");
+      const openDisplayElem = document.getElementById(currentOpenSection + "-display");
+      const openEditBtn = document.getElementById(currentOpenSection + "-edit-btn");
+      
+      if (openFormElem) openFormElem.style.display = "none";
+      if (openDisplayElem) openDisplayElem.style.display = "block";
+      if (openEditBtn) openEditBtn.style.display = "block";
+      
+      // Also close email section if it's open
+      if (currentOpenSection === 'email') {
+        toggleEmailInput(true);
+      }
+    }
+    
+    // Now open the requested section
+    const displayElem = document.getElementById(section + "-display");
+    const formElem = document.getElementById(section + "-form");
+    const editBtn = document.getElementById(section + "-edit-btn");
+    
+    if (!displayElem || !formElem) return;
+    
+    displayElem.style.display = "none";
+    formElem.style.display = "block";
+    if (editBtn) editBtn.style.display = "none";
+    
+    currentOpenSection = section;
+  }
+
+  // Toggle the visibility of the email change UI
+  function toggleEmailInput(forceClose = false) {
+    if (window.emailCloseTimer) {
+      clearTimeout(window.emailCloseTimer);
+      window.emailCloseTimer = null;
+    }
+    
+    const container = document.getElementById('email-form-container');
+    const displaySection = document.getElementById('email-display-section');
+    const emailBtn = document.getElementById('toggle-email-btn');
+    
+    // If forcing close or container is already visible
+    if (forceClose || (container.style.display === 'block')) {
+      container.style.display = 'none';
+      displaySection.style.display = 'block';
+      if (emailBtn) emailBtn.style.display = 'block';
+      document.getElementById('email-form-message').innerHTML = '';
+      document.getElementById('id_new_email').value = '';
+      
+      if (currentOpenSection === 'email') {
+        currentOpenSection = null;
+      }
+      return;
+    }
+    
+    // Close any other open section first
+    if (currentOpenSection && currentOpenSection !== 'email') {
+      toggleSection(currentOpenSection, true);
+    }
+    
+    // Now open the email section
+    container.style.display = 'block';
+    displaySection.style.display = 'none';
+    if (emailBtn) emailBtn.style.display = 'none';
+    currentOpenSection = 'email';
+  }
+
+  // Handle the email change request via AJAX.
+  document.getElementById('email-change-submit').addEventListener('click', function(e) {
+    const emailValue = document.getElementById('id_new_email').value;
     const messageDiv = document.getElementById('email-form-message');
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const formData = new FormData();
+    formData.append('email', emailValue);
     
-    fetch('{% url "profile-emailchange" %}', {
+    fetch("{% url 'profile-emailchange' %}", {
       method: 'POST',
       body: formData,
       headers: {
-        'X-Requested-With': 'XMLHttpRequest'
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRFToken': csrfToken
       }
     })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        messageDiv.innerHTML = `<div class="text-green-600">${data.message}</div>`;
-        
-        // Update displayed email
-        document.getElementById('email-address-display').textContent = data.email;
-        if (document.getElementById('email-display')) {
-          document.getElementById('email-display').textContent = data.email;
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          messageDiv.innerHTML = `<div class="text-green-600">${data.message}</div>`;
+          document.getElementById('current-email').textContent = data.email;
+          const verificationStatus = document.getElementById('verification-status');
+          verificationStatus.textContent = 'Not verified';
+          verificationStatus.className = 'text-amber-500 mt-1';
+          document.getElementById('verification-action').classList.remove('hidden');
+          window.emailCloseTimer = setTimeout(() => {
+            toggleEmailInput(true);
+            window.emailCloseTimer = null;
+          }, 4000);
+        } else {
+          messageDiv.innerHTML = `<div class="text-red-600">${data.message}</div>`;
         }
-        
-        // Update verification status
-        const verificationStatus = document.getElementById('verification-status');
-        verificationStatus.textContent = 'Not verified';
-        verificationStatus.className = 'text-amber-500';
-        
-        // Show the verification button if not already visible
-        const verificationCell = document.getElementById('verification-action-cell');
-        if (!verificationCell.querySelector('button')) {
-          verificationCell.innerHTML = `
-            <button 
-              type="button" 
-              onclick="sendVerificationEmail()" 
-              class="font-medium text-blue-600 hover:underline bg-transparent border-none p-0 cursor-pointer">
-              Send verification email
-            </button>
-          `;
-        }
-        
-        // Auto-hide form after success
-        setTimeout(hideEmailForm, 3000);
-      } else {
-        messageDiv.innerHTML = `<div class="text-red-600">${data.message}</div>`;
-      }
-    })
-    .catch(error => {
-      messageDiv.innerHTML = '<div class="text-red-600">An error occurred. Please try again.</div>';
-      console.error('Error:', error);
-    });
+      })
+      .catch(error => {
+        messageDiv.innerHTML = '<div class="text-red-600">An error occurred. Please try again.</div>';
+        console.error('Error:', error);
+      });
   });
-  
-  // Handle verification email
+
+  // Handle sending a verification email.
   function sendVerificationEmail() {
     fetch('{% url "profile-emailverify" %}', {
       method: 'POST',
@@ -272,27 +565,33 @@
         'X-CSRFToken': '{{ csrf_token }}'
       }
     })
-    .then(response => response.json())
-    .then(data => {
-      const verificationCell = document.getElementById('verification-action-cell');
-      const tempMessage = document.createElement('div');
-      tempMessage.className = 'text-green-600';
-      tempMessage.textContent = data.message;
-      
-      // Replace button with success message
-      const originalContent = verificationCell.innerHTML;
-      verificationCell.innerHTML = '';
-      verificationCell.appendChild(tempMessage);
-      
-      // Restore button after 3 seconds
-      setTimeout(() => {
-        verificationCell.innerHTML = originalContent;
-      }, 3000);
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      alert('Failed to send verification email. Please try again.');
-    });
+      .then(response => response.json())
+      .then(data => {
+        const verificationAction = document.getElementById('verification-action');
+        const tempMessage = document.createElement('div');
+        tempMessage.className = 'text-green-600 text-sm';
+        tempMessage.textContent = data.message;
+        const originalContent = verificationAction.innerHTML;
+        verificationAction.innerHTML = '';
+        verificationAction.appendChild(tempMessage);
+        setTimeout(() => {
+          verificationAction.innerHTML = originalContent;
+        }, 3000);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to send verification email. Please try again.');
+      });
   }
+
+  // Set placeholders for name fields on DOM load.
+  document.addEventListener('DOMContentLoaded', function() {
+    const firstName = document.getElementById('id_first_name');
+    if (firstName) { firstName.placeholder = 'Enter first name'; }
+    const middleName = document.getElementById('id_middle_name');
+    if (middleName) { middleName.placeholder = 'Enter middle name'; }
+    const lastName = document.getElementById('id_last_name');
+    if (lastName) { lastName.placeholder = 'Enter last name'; }
+  });
 </script>
 {% endblock %}
