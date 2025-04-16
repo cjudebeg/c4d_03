@@ -6,6 +6,11 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   
+  <!-- Alpine.js scripts - CRITICALLY IMPORTANT: Core MUST load LAST, after all plugins -->
+  <script defer src="https://unpkg.com/@alpinejs/ui@3.14.9/dist/cdn.min.js"></script>
+  <script defer src="https://unpkg.com/@alpinejs/focus@3.14.9/dist/cdn.min.js"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.14.9/dist/cdn.min.js"></script>
+  
   <h2 class="text-2xl font-bold mb-6 lg:mb-10">
     {% if onboarding %}Onboarding{% else %}Edit your Profile{% endif %}
   </h2>
@@ -71,21 +76,21 @@
               name="new_email" 
               id="id_new_email" 
               placeholder="Enter new email address" 
-              class="bg-white px-3 py-2 border border-gray-300 w-full" 
+              class="bg-gray-200 px-3 py-2 border border-gray-300 w-full sm:w-3/4 md:max-w-md rounded-none" 
               required
             >
             <div class="flex space-x-2">
               <button 
                 type="button" 
                 id="email-change-submit" 
-                class="bg-blue-500 text-white px-4 py-2 text-sm"
+                class="bg-blue-500 text-white px-4 py-2 text-sm rounded-none"
               >
                 Update
               </button>
               <button 
                 type="button" 
                 onclick="toggleEmailInput()" 
-                class="bg-gray-500 text-white px-4 py-2 border border-gray-300 text-sm"
+                class="bg-gray-500 text-white px-4 py-2 border border-gray-300 text-sm rounded-none"
               >
                 Cancel
               </button>
@@ -108,7 +113,7 @@
   </div>
 
   <!-- Main Profile Update Form -->
-  <form method="POST" enctype="multipart/form-data">
+  <form method="POST" enctype="multipart/form-data" id="profileForm">
     {% csrf_token %}
     
     <!-- Personal Information Section -->
@@ -132,7 +137,7 @@
                 name="first_name" 
                 id="id_first_name" 
                 placeholder="Enter first name" 
-                class="w-full bg-white px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="w-full sm:w-3/4 md:w-5/6 bg-gray-200 px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-none"
                 {% if form.first_name.value %}value="{{ form.first_name.value }}"{% endif %}
                 required
               >
@@ -152,7 +157,7 @@
                 name="middle_name" 
                 id="id_middle_name" 
                 placeholder="Enter middle name" 
-                class="w-full bg-white px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="w-full sm:w-3/4 md:w-5/6 bg-gray-200 px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-none"
                 {% if form.middle_name.value %}value="{{ form.middle_name.value }}"{% endif %}
               >
               {% if form.middle_name.errors %}
@@ -172,7 +177,7 @@
                 name="last_name" 
                 id="id_last_name" 
                 placeholder="Enter last name" 
-                class="w-full bg-white px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="w-full sm:w-3/4 md:w-5/6 bg-gray-200 px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-none"
                 {% if form.last_name.value %}value="{{ form.last_name.value }}"{% endif %}
                 required
               >
@@ -207,7 +212,7 @@
                 CSID Number
               </label>
               <div class="flex">
-                <div class="flex items-center justify-center px-3 border border-gray-300 border-r-0">
+                <div class="flex items-center justify-center px-3 border border-gray-300 border-r-0 bg-gray-200 rounded-none">
                   <span>CS</span>
                 </div>
                 <input 
@@ -215,7 +220,7 @@
                   name="clearance_no" 
                   id="id_clearance_no" 
                   placeholder="Enter numbers" 
-                  class="w-full bg-white px-3 py-2 border border-l-0 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full sm:w-[calc(75%-30px)] md:w-[calc(83.333%-30px)] bg-gray-200 px-3 py-2 border border-l-0 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-none"
                   {% if form.clearance_no.value and form.clearance_no.value|slice:"0:2" == "CS" %}
                     value="{{ form.clearance_no.value|slice:'2:' }}"
                   {% elif form.clearance_no.value %}
@@ -233,14 +238,14 @@
               <label for="id_clearance_level" class="block text-sm font-medium text-gray-700 mb-1">
                 AGSVA Level
               </label>
-              <div class="relative">
+              <div class="relative w-full sm:w-3/4 md:w-5/6">
                 <select 
                   name="clearance_level" 
                   id="id_clearance_level" 
-                  class="w-full bg-white px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                  class="w-full bg-gray-200 px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-8 rounded-none"
                   required
                 >
-                  <option value="" {% if not form.clearance_level.value %}selected{% endif %}>
+                  <option value="none" {% if not form.clearance_level.value %}selected{% endif %}>
                     Select clearance level
                   </option>
                   {% for value, label in form.fields.clearance_level.choices %}
@@ -271,7 +276,7 @@
               name="date_of_birth" 
               id="id_date_of_birth" 
               placeholder="DD/MM/YYYY" 
-              class="w-full md:w-64 bg-white px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full md:w-64 bg-gray-200 px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-none"
               {% if form.date_of_birth.value %}value="{{ form.date_of_birth.value|date:'Y-m-d' }}"{% endif %}
             >
             {% if form.date_of_birth.errors %}
@@ -284,30 +289,93 @@
 
         <!-- Form Action Buttons -->
         <div class="mt-6 flex flex-row flex-nowrap items-center space-x-2">
-          <button type="submit" class="bg-blue-500 text-white py-2 px-4 whitespace-nowrap">
+          <button type="submit" id="submitBtn" class="bg-blue-500 text-white py-2 px-4 whitespace-nowrap rounded-none">
             Submit
           </button>
           {% if onboarding %}
-            <a class="bg-gray-500 text-white py-2 px-4 whitespace-nowrap" href="{% url 'home' %}">
+            <a class="bg-gray-500 text-white py-2 px-4 whitespace-nowrap rounded-none" href="{% url 'home' %}">
               Skip for now
             </a>
           {% else %}
-            <a class="bg-gray-500 text-white py-2 px-4 whitespace-nowrap" href="{{ request.META.HTTP_REFERER }}">
+            <a class="bg-gray-500 text-white py-2 px-4 whitespace-nowrap rounded-none" href="{{ request.META.HTTP_REFERER }}">
               Cancel
             </a>
           {% endif %}
-          <a class="bg-white border border-red-500 text-red-500 py-2 px-4 whitespace-nowrap" style="margin-left: 80px;" href="{% url 'profile-delete' %}">
+          <a class="bg-white border border-red-500 text-red-500 py-2 px-4 whitespace-nowrap rounded-none" style="margin-left: 80px;" href="{% url 'profile-delete' %}">
             Delete
           </a>
         </div>
       </div>
     </div>
   </form>
+  
+  <!-- Clearance Validation Modal -->
+  <div id="clearanceErrorModal" style="display: none" class="fixed inset-0 z-10 overflow-y-auto" role="dialog" aria-modal="true">
+    <!-- Overlay -->
+    <div id="modalOverlay" class="fixed inset-0 bg-black/25"></div>
+    <!-- Panel -->
+    <div class="relative flex min-h-screen items-center justify-center p-4">
+      <div class="relative min-w-96 max-w-xl bg-white p-6 shadow-lg rounded-none">
+        <!-- Title -->
+        <h2 class="text-xl font-medium text-gray-800">Security Clearance Required</h2>
+        <!-- Content -->
+        <p class="mt-4 text-gray-600">
+          You must have an active security clearance to complete your onboarding.
+        </p>
+        <p class="mt-2 text-gray-600">
+          If you're waiting for your clearance to be approved, you can skip this step for now and complete it later when your clearance is active.
+        </p>
+        <!-- Buttons -->
+        <div class="mt-6 flex justify-end space-x-3">
+          <button type="button" id="closeModalBtn" class="bg-blue-500 text-white px-4 py-2 hover:bg-blue-600 rounded-none">
+            I understand
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-  // Global variable to hold the auto-close timer.
+  // Global variables
   let emailCloseTimer = null;
+  const profileForm = document.getElementById('profileForm');
+  const clearanceLevel = document.getElementById('id_clearance_level');
+  const clearanceErrorModal = document.getElementById('clearanceErrorModal');
+  const closeModalBtn = document.getElementById('closeModalBtn');
+
+  // Function to check if clearance is pending or none
+  function clearanceIsPending() {
+    const value = clearanceLevel.value;
+    return value === 'None' || value === 'Pending';
+  }
+
+  // Form submission handler with clearance validation
+  profileForm.addEventListener('submit', function(event) {
+    if (clearanceIsPending()) {
+      event.preventDefault(); // Prevent the form from submitting
+      clearanceErrorModal.style.display = 'block'; // Show the error modal
+      return false;
+    }
+    return true; // Allow the form to submit
+  });
+
+  // Close modal when button is clicked
+  closeModalBtn.addEventListener('click', function() {
+    clearanceErrorModal.style.display = 'none';
+  });
+
+  // Close modal when clicking outside
+  document.getElementById('modalOverlay').addEventListener('click', function() {
+    clearanceErrorModal.style.display = 'none';
+  });
+
+  // Close modal with escape key
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape' && clearanceErrorModal.style.display === 'block') {
+      clearanceErrorModal.style.display = 'none';
+    }
+  });
 
   // Toggle the visibility of the email change UI immediately.
   function toggleEmailInput() {

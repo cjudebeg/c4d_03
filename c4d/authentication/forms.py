@@ -110,9 +110,6 @@ class ProfileUpdateForm(ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        # Initialise the form and update fields
-        # Optional keyword arg 'admin_edit' (default False): if not True, then clearance_revalidation
-        # and clearance_active are disabled.
         admin_edit = kwargs.pop('admin_edit', False)
         super().__init__(*args, **kwargs)
         self.fields["state"].required = False
@@ -125,6 +122,12 @@ class ProfileUpdateForm(ModelForm):
         self.fields["state"].choices = [("", "Select State/Territory")] + original_state_choices[1:]
         original_clearance_choices = list(self.fields["clearance_level"].choices)
         self.fields["clearance_level"].choices = [("", "Select Clearance Level")] + original_clearance_choices[1:]
+        
+        # Override the invalid choice error message for clearance_level
+        self.fields["clearance_level"].error_messages = {
+            'invalid_choice': 'Select your clearance level'
+        }
+        
         for field_name, field in self.fields.items():
             existing_classes = field.widget.attrs.get("class", "")
             field.widget.attrs["class"] = (
@@ -132,7 +135,6 @@ class ProfileUpdateForm(ModelForm):
                 " block w-full bg-gray-100 px-2 py-2 mb-4 border border-gray-300 " +
                 "focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
             ).strip()
-        # Only allow admin to modify clearance_revalidation and clearance_active.
         if not admin_edit:
             if 'clearance_revalidation' in self.fields:
                 self.fields['clearance_revalidation'].widget.attrs['disabled'] = True
