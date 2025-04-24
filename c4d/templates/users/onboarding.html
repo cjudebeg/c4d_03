@@ -4,107 +4,73 @@
 {% block content %}
 <div class="w-full">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-  
-  <!-- Alpine.js scripts - CRITICALLY IMPORTANT: Core MUST load LAST, after all plugins -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- Alpine.js scripts – CORE MUST LOAD LAST -->
   <script defer src="https://unpkg.com/@alpinejs/ui@3.14.9/dist/cdn.min.js"></script>
   <script defer src="https://unpkg.com/@alpinejs/focus@3.14.9/dist/cdn.min.js"></script>
   <script defer src="https://unpkg.com/alpinejs@3.14.9/dist/cdn.min.js"></script>
-  
-  <h2 class="text-2xl font-bold mb-6 lg:mb-10">
+
+  <!-- Helper for red asterisk -->
+  <style>.required-star{color:#dc2626;margin-left:0.15rem}</style>
+
+  <h2 class="text-2xl font-bold mb-2 lg:mb-4">
     {% if onboarding %}Onboarding{% else %}Edit your Profile{% endif %}
   </h2>
+  <p class="text-sm text-gray-600 mb-6">
+    Fields marked with <span class="required-star">*</span> are required.<br>
+  </p>
 
-  <!-- Account Section with Email Display and Inline Email Change -->
+  <!-- ===================== ACCOUNT ===================== -->
   <div class="border-b border-t border-gray-200 py-6 my-6">
     <div class="lg:grid lg:grid-cols-4 lg:gap-8">
-      <!-- Left Column: Section Title -->
-      <div class="col-span-1">
-        <h3 class="text-lg font-semibold mb-4 lg:mb-0">Account</h3>
-      </div>
-      
-      <!-- Right Column: Account Details -->
+      <div class="col-span-1"><h3 class="text-lg font-semibold mb-4 lg:mb-0">Account</h3></div>
       <div class="col-span-3 mr-2 md:mr-[30px] lg:mr-[180px]">
-        <!-- Email Display Section -->
+        <!-- Email display & change (unchanged) -->
         <div id="email-display-section" class="mb-4">
           <div class="flex items-center justify-between mb-2">
             <div class="flex items-center space-x-2 md:space-x-4 lg:space-x-8">
-              <span id="current-email" class="text-gray-700">
-                {% if user.email %}{{ user.email }}{% else %}Not provided{% endif %}
-              </span>
+              <span id="current-email" class="text-gray-700">{{ user.email|default:"Not provided" }}</span>
               <span id="verification-status"
-                class="{% if user.emailaddress_set.first and user.emailaddress_set.first.verified %}text-green-500{% else %}text-amber-500{% endif %}">
+                    class="{% if user.emailaddress_set.first and user.emailaddress_set.first.verified %}text-green-500{% else %}text-amber-500{% endif %}">
                 {% if user.emailaddress_set.first and user.emailaddress_set.first.verified %}
-                  Verified
-                {% else %}
-                  Not verified
-                {% endif %}
+                  <span class="font-semibold">Verified</span>
+                {% else %}Not verified{% endif %}
               </span>
             </div>
-            <!-- Toggle the email–change UI -->
-            <button 
-              type="button" 
-              id="toggle-email-btn" 
-              onclick="toggleEmailInput()" 
-              class="text-blue-600 hover:text-blue-800 font-medium text-sm"
-            >
+            <button type="button" id="toggle-email-btn"
+                    onclick="toggleEmailInput()"
+                    class="text-blue-600 hover:text-blue-800 font-medium text-sm">
               Change email
             </button>
           </div>
-          
-          <!-- Verification Action If Needed -->
-          <div 
-            id="verification-action" 
-            class="{% if user.emailaddress_set.first and user.emailaddress_set.first.verified %}hidden{% else %}block{% endif %}"
-          >
-            <button 
-              type="button" 
-              onclick="sendVerificationEmail()" 
-              class="text-blue-600 hover:text-blue-800 font-medium text-sm bg-transparent border-none p-0 cursor-pointer"
-            >
+          <div id="verification-action"
+               class="{% if user.emailaddress_set.first and user.emailaddress_set.first.verified %}hidden{% else %}block{% endif %}">
+            <button type="button" onclick="sendVerificationEmail()"
+                    class="text-blue-600 hover:text-blue-800 font-medium text-sm bg-transparent border-none p-0">
               Send verification email
             </button>
           </div>
         </div>
-        
-        <!-- Inline Email Change UI (NOT a nested form) -->
-        <div id="email-form-container" style="display: none;" class="mb-6">
+        <div id="email-form-container" style="display:none" class="mb-6">
           {% csrf_token %}
           <div class="flex flex-col space-y-2">
-            <input 
-              type="email" 
-              name="new_email" 
-              id="id_new_email" 
-              placeholder="Enter new email address" 
-              class="bg-gray-200 px-3 py-2 border border-gray-300 w-full sm:w-3/4 md:max-w-md rounded-none" 
-              required
-            >
+            <input type="email" name="new_email" id="id_new_email"
+                   placeholder="Enter new email address"
+                   class="bg-gray-200 px-3 py-2 border border-gray-300 w-full sm:w-3/4 md:max-w-md" required>
             <div class="flex space-x-2">
-              <button 
-                type="button" 
-                id="email-change-submit" 
-                class="bg-blue-500 text-white px-4 py-2 text-sm rounded-none"
-              >
-                Update
-              </button>
-              <button 
-                type="button" 
-                onclick="toggleEmailInput()" 
-                class="bg-gray-500 text-white px-4 py-2 border border-gray-300 text-sm rounded-none"
-              >
-                Cancel
-              </button>
+              <button type="button" id="email-change-submit"
+                      class="bg-blue-500 text-white px-4 py-2 text-sm">Update</button>
+              <button type="button" onclick="toggleEmailInput()"
+                      class="bg-gray-500 text-white px-4 py-2 border border-gray-300 text-sm">Cancel</button>
             </div>
           </div>
-          <!-- The message area where the verification sent message appears in green -->
           <div id="email-form-message" class="mt-2 text-sm"></div>
         </div>
-        
         <div class="flex justify-end">
-          <a 
-            href="{% url 'account_change_password' %}" 
-            class="text-blue-600 hover:text-blue-800 font-medium text-sm"
-          >
+          <a href="{% url 'account_change_password' %}"
+             class="text-blue-600 hover:text-blue-800 font-medium text-sm">
             Change password
           </a>
         </div>
@@ -112,79 +78,56 @@
     </div>
   </div>
 
-  <!-- Main Profile Update Form -->
+  <!-- ===================== MAIN PROFILE FORM ===================== -->
   <form method="POST" enctype="multipart/form-data" id="profileForm">
     {% csrf_token %}
-    
-    <!-- Personal Information Section -->
+
+    <!-- ========== PERSONAL ========== -->
     <div class="border-b border-gray-200 pb-6 mb-6">
       <div class="lg:grid lg:grid-cols-4 lg:gap-8">
-        <!-- Left Column: Section Title and Note -->
         <div class="col-span-1">
           <h3 class="text-lg font-semibold mb-4 lg:mb-0">Personal</h3>
           <p class="text-sm text-gray-700 mb-4 lg:mb-0">Full name required</p>
         </div>
-        
-        <!-- Right Column: Form Fields -->
         <div class="col-span-3">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <!-- First Name -->
             <div>
               <label for="id_first_name" class="block text-sm font-medium text-gray-700 mb-1">
-                First name
+                First name <span class="required-star">*</span>
               </label>
-              <input 
-                type="text" 
-                name="first_name" 
-                id="id_first_name" 
-                placeholder="Enter first name" 
-                class="w-full sm:w-3/4 md:w-5/6 bg-gray-200 px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-none"
-                {% if form.first_name.value %}value="{{ form.first_name.value }}"{% endif %}
-                required
-              >
+              <input type="text" name="first_name" id="id_first_name"
+                     placeholder="Enter first name"
+                     class="w-full sm:w-3/4 md:w-5/6 bg-gray-200 px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                     {% if form.first_name.value %}value="{{ form.first_name.value }}"{% endif %} required>
               {% if form.first_name.errors %}
-                <div class="mt-1 text-red-600 text-sm">
-                  {{ form.first_name.errors }}
-                </div>
+                <div class="mt-1 text-red-600 text-sm">{{ form.first_name.errors }}</div>
               {% endif %}
             </div>
-            
+            <!-- Middle Name -->
             <div>
-              <label for="id_middle_name" class="block text-sm font-medium text-gray-700 mb-1">
-                Middle name
-              </label>
-              <input 
-                type="text" 
-                name="middle_name" 
-                id="id_middle_name" 
-                placeholder="Enter middle name" 
-                class="w-full sm:w-3/4 md:w-5/6 bg-gray-200 px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-none"
-                {% if form.middle_name.value %}value="{{ form.middle_name.value }}"{% endif %}
-              >
+              <label for="id_middle_name" class="block text-sm font-medium text-gray-700 mb-1">Middle name</label>
+              <input type="text" name="middle_name" id="id_middle_name"
+                     placeholder="Enter middle name"
+                     class="w-full sm:w-3/4 md:w-5/6 bg-gray-200 px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                     {% if form.middle_name.value %}value="{{ form.middle_name.value }}"{% endif %}>
               {% if form.middle_name.errors %}
-                <div class="mt-1 text-red-600 text-sm">
-                  {{ form.middle_name.errors }}
-                </div>
+                <div class="mt-1 text-red-600 text-sm">{{ form.middle_name.errors }}</div>
               {% endif %}
             </div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <!-- Last Name -->
             <div>
               <label for="id_last_name" class="block text-sm font-medium text-gray-700 mb-1">
-                Last name
+                Last name <span class="required-star">*</span>
               </label>
-              <input 
-                type="text" 
-                name="last_name" 
-                id="id_last_name" 
-                placeholder="Enter last name" 
-                class="w-full sm:w-3/4 md:w-5/6 bg-gray-200 px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-none"
-                {% if form.last_name.value %}value="{{ form.last_name.value }}"{% endif %}
-                required
-              >
+              <input type="text" name="last_name" id="id_last_name"
+                     placeholder="Enter last name"
+                     class="w-full sm:w-3/4 md:w-5/6 bg-gray-200 px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                     {% if form.last_name.value %}value="{{ form.last_name.value }}"{% endif %} required>
               {% if form.last_name.errors %}
-                <div class="mt-1 text-red-600 text-sm">
-                  {{ form.last_name.errors }}
-                </div>
+                <div class="mt-1 text-red-600 text-sm">{{ form.last_name.errors }}</div>
               {% endif %}
             </div>
             <div class="hidden md:block"></div>
@@ -193,67 +136,50 @@
       </div>
     </div>
 
-    <!-- Security Clearance Section -->
+    <!-- ========== SECURITY CLEARANCE ========== -->
     <div class="pb-6 mb-6">
       <div class="lg:grid lg:grid-cols-4 lg:gap-8">
-        <!-- Left Column: Section Title and Note -->
         <div class="col-span-1">
           <h3 class="text-lg font-semibold mb-4 lg:mb-0">Security Clearance</h3>
           <p class="text-sm text-gray-700 mb-4 lg:mb-0">
-            If you cannot provide your Clearance Subject Identification number (CSID), your date of birth is required
+            Provide your CSID or Date of Birth.<br>
           </p>
         </div>
-        
-        <!-- Right Column: Clearance Fields -->
+
         <div class="col-span-3">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <!-- CSID -->
             <div>
-              <label for="id_clearance_no" class="block text-sm font-medium text-gray-700 mb-1">
-                CSID Number
-              </label>
+              <label for="id_clearance_no" class="block text-sm font-medium text-gray-700 mb-1">CSID Number</label>
               <div class="flex">
-                <div class="flex items-center justify-center px-3 border border-gray-300 border-r-0 bg-gray-200 rounded-none">
-                  <span>CS</span>
-                </div>
-                <input 
-                  type="text" 
-                  name="clearance_no" 
-                  id="id_clearance_no" 
-                  placeholder="Enter numbers" 
-                  class="w-full sm:w-[calc(75%-30px)] md:w-[calc(83.333%-30px)] bg-gray-200 px-3 py-2 border border-l-0 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-none"
-                  {% if form.clearance_no.value and form.clearance_no.value|slice:"0:2" == "CS" %}
-                    value="{{ form.clearance_no.value|slice:'2:' }}"
-                  {% elif form.clearance_no.value %}
-                    value="{{ form.clearance_no.value }}"
-                  {% endif %}
-                >
+                <div class="flex items-center justify-center px-3 border border-gray-300 border-r-0 bg-gray-200">CS</div>
+                <input type="text" name="clearance_no" id="id_clearance_no"
+                       placeholder="Enter numbers"
+                       class="w-full sm:w-[calc(75%-30px)] md:w-[calc(83.333%-30px)] bg-gray-200 px-3 py-2 border border-l-0 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       {% if form.clearance_no.value and form.clearance_no.value|slice:"0:2" == "CS" %}
+                         value="{{ form.clearance_no.value|slice:'2:' }}"
+                       {% elif form.clearance_no.value %}
+                         value="{{ form.clearance_no.value }}"
+                       {% endif %}>
               </div>
               {% if form.clearance_no.errors %}
-                <div class="mt-1 text-red-600 text-sm">
-                  {{ form.clearance_no.errors }}
-                </div>
+                <div class="mt-1 text-red-600 text-sm">{{ form.clearance_no.errors }}</div>
               {% endif %}
             </div>
+
+            <!-- Clearance Level -->
             <div>
               <label for="id_clearance_level" class="block text-sm font-medium text-gray-700 mb-1">
                 AGSVA Level
               </label>
               <div class="relative w-full sm:w-3/4 md:w-5/6">
-                <select 
-                  name="clearance_level" 
-                  id="id_clearance_level" 
-                  class="w-full bg-gray-200 px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-8 rounded-none"
-                  required
-                >
-                  <option value="none" {% if not form.clearance_level.value %}selected{% endif %}>
-                    Select clearance level
-                  </option>
-                  {% for value, label in form.fields.clearance_level.choices %}
-                    {% if value %}
-                      <option value="{{ value }}" {% if form.clearance_level.value == value %}selected{% endif %}>
-                        {{ label }}
-                      </option>
-                    {% endif %}
+                <select name="clearance_level" id="id_clearance_level"
+                        class="w-full bg-gray-200 px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-8">
+                  {% for value,label in form.fields.clearance_level.choices %}
+                    <option value="{{ value }}"
+                      {% if form.clearance_level.value == value %}selected{% endif %}>
+                      {{ label }}
+                    </option>
                   {% endfor %}
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
@@ -261,75 +187,55 @@
                 </div>
               </div>
               {% if form.clearance_level.errors %}
-                <div class="mt-1 text-red-600 text-sm">
-                  {{ form.clearance_level.errors }}
-                </div>
+                <div class="mt-1 text-red-600 text-sm">{{ form.clearance_level.errors }}</div>
               {% endif %}
             </div>
           </div>
+
+          <!-- Date of Birth -->
           <div class="mt-6">
-            <label for="id_date_of_birth" class="block text-sm font-medium text-gray-700 mb-1">
-              Date of birth
-            </label>
-            <input 
-              type="date" 
-              name="date_of_birth" 
-              id="id_date_of_birth" 
-              placeholder="DD/MM/YYYY" 
-              class="w-full md:w-64 bg-gray-200 px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-none"
-              {% if form.date_of_birth.value %}value="{{ form.date_of_birth.value|date:'Y-m-d' }}"{% endif %}
-            >
+            <label for="id_date_of_birth" class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+            <input type="date" name="date_of_birth" id="id_date_of_birth"
+                   placeholder="DD/MM/YYYY"
+                   class="w-full md:w-64 bg-gray-200 px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   {% if form.date_of_birth.value %}value="{{ form.date_of_birth.value|date:'Y-m-d' }}"{% endif %}>
             {% if form.date_of_birth.errors %}
-              <div class="mt-1 text-red-600 text-sm">
-                {{ form.date_of_birth.errors }}
-              </div>
+              <div class="mt-1 text-red-600 text-sm">{{ form.date_of_birth.errors }}</div>
             {% endif %}
           </div>
         </div>
 
-        <!-- Form Action Buttons -->
         <div class="mt-6 flex flex-row flex-nowrap items-center space-x-2">
-          <button type="submit" id="submitBtn" class="bg-blue-500 text-white py-2 px-4 whitespace-nowrap rounded-none">
-            Submit
-          </button>
+          <button type="submit" id="submitBtn" class="bg-blue-500 text-white py-2 px-4 whitespace-nowrap">Submit</button>
           {% if onboarding %}
-            <a class="bg-gray-500 text-white py-2 px-4 whitespace-nowrap rounded-none" href="{% url 'home' %}">
-              Skip for now
-            </a>
+            <a class="bg-gray-500 text-white py-2 px-4 whitespace-nowrap" href="{% url 'home' %}">Skip for now</a>
           {% else %}
-            <a class="bg-gray-500 text-white py-2 px-4 whitespace-nowrap rounded-none" href="{{ request.META.HTTP_REFERER }}">
-              Cancel
-            </a>
+            <a class="bg-gray-500 text-white py-2 px-4 whitespace-nowrap" href="{{ request.META.HTTP_REFERER }}">Cancel</a>
           {% endif %}
-          <a class="bg-white border border-red-500 text-red-500 py-2 px-4 whitespace-nowrap rounded-none" style="margin-left: 80px;" href="{% url 'profile-delete' %}">
-            Delete
-          </a>
+          <a class="bg-white border border-red-500 text-red-500 py-2 px-4 whitespace-nowrap"
+             style="margin-left:80px" href="{% url 'profile-delete' %}">Delete</a>
         </div>
       </div>
     </div>
   </form>
-  
-  <!-- Clearance Validation Modal -->
-  <div id="clearanceErrorModal" style="display: none" class="fixed inset-0 z-10 overflow-y-auto" role="dialog" aria-modal="true">
-    <!-- Overlay -->
+
+  <!-- =========== CLEARANCE ERROR MODAL =========== -->
+  <div id="clearanceErrorModal"
+       style="display:none"
+       class="fixed inset-0 z-10 overflow-y-auto" role="dialog" aria-modal="true">
     <div id="modalOverlay" class="fixed inset-0 bg-black/25"></div>
-    <!-- Panel -->
     <div class="relative flex min-h-screen items-center justify-center p-4">
-      <div class="relative min-w-96 max-w-xl bg-white p-6 shadow-lg rounded-none">
-        <!-- Title -->
+      <div class="relative min-w-96 max-w-xl bg-white p-6 shadow-lg">
         <h2 class="text-xl font-medium text-gray-800">Security Clearance Required</h2>
-        <!-- Content -->
         <p class="mt-4 text-gray-600">
-          You must have an active security clearance to complete your onboarding.
+          You must have an active clearance to complete onboarding.
         </p>
         <p class="mt-2 text-gray-600">
-          If you're waiting for your clearance to be approved, you can skip this step for now and complete it later when your clearance is active.
+          If you are awaiting approval, you can skip this step now and return once your clearance is active.
         </p>
-        <!-- Buttons -->
         <div class="mt-6 flex justify-end space-x-3">
-          <button type="button" id="closeModalBtn" class="bg-blue-500 text-white px-4 py-2 hover:bg-blue-600 rounded-none">
-            I understand
-          </button>
+          <button type="button" id="closeModalBtn"
+                  class="bg-blue-500 text-white px-4 py-2 hover:bg-blue-600">I understand</button>
         </div>
       </div>
     </div>
@@ -337,148 +243,49 @@
 </div>
 
 <script>
-  // Global variables
-  let emailCloseTimer = null;
-  const profileForm = document.getElementById('profileForm');
-  const clearanceLevel = document.getElementById('id_clearance_level');
-  const clearanceErrorModal = document.getElementById('clearanceErrorModal');
-  const closeModalBtn = document.getElementById('closeModalBtn');
+/* ---------------- email helpers (unchanged) ---------------- */
+let emailCloseTimer=null;
+function toggleEmailInput(){if(emailCloseTimer){clearTimeout(emailCloseTimer);emailCloseTimer=null}
+const c=document.getElementById("email-form-container");const d=document.getElementById("email-display-section");
+if(c.style.display==="none"||c.style.display===""){c.style.display="block";d.style.display="none"}
+else{c.style.display="none";d.style.display="block";document.getElementById("email-form-message").innerHTML="";
+document.getElementById("id_new_email").value=""}}
+document.getElementById("email-change-submit").addEventListener("click",function(){
+const e=document.getElementById("id_new_email").value;const m=document.getElementById("email-form-message");
+const t=document.querySelector("[name=csrfmiddlewaretoken]").value;const f=new FormData();f.append("email",e);
+fetch("{% url 'profile-emailchange' %}",{method:"POST",body:f,headers:{"X-Requested-With":"XMLHttpRequest","X-CSRFToken":t}})
+.then(r=>r.json()).then(d=>{if(d.success){m.innerHTML=`<div class="text-green-600">${d.message}</div>`;
+document.getElementById("current-email").textContent=d.email;const v=document.getElementById("verification-status");
+v.textContent="Not verified";v.className="text-amber-500";document.getElementById("verification-action").classList.remove("hidden");
+emailCloseTimer=setTimeout(()=>{toggleEmailInput();emailCloseTimer=null},4000)}else{m.innerHTML=`<div class="text-red-600">${d.message}</div>`}}).catch(()=>{
+m.innerHTML='<div class="text-red-600">An error occurred. Please try again.</div>'})});
+function sendVerificationEmail(){fetch("{% url 'profile-emailverify' %}",{method:"POST",
+headers:{"X-Requested-With":"XMLHttpRequest","X-CSRFToken":"{{ csrf_token }}"}}).then(r=>r.json()).then(d=>{
+const v=document.getElementById("verification-action");const tmp=document.createElement("div");
+tmp.className="text-green-600 text-sm";tmp.textContent=d.message;const o=v.innerHTML;v.innerHTML="";
+v.appendChild(tmp);setTimeout(()=>{v.innerHTML=o},3000)}).catch(()=>alert("Failed to send verification email. Please try again."))}
 
-  // Function to check if clearance is pending or none
-  function clearanceIsPending() {
-    const value = clearanceLevel.value;
-    return value === 'None' || value === 'Pending';
-  }
+/* ---------- validation: CSID/DOB & clearance level ---------- */
+const profileForm=document.getElementById("profileForm");
+const clearanceLevel=document.getElementById("id_clearance_level");
+const clearanceErrorModal=document.getElementById("clearanceErrorModal");
+const closeModalBtn=document.getElementById("closeModalBtn");
+function clearanceIsBlocked(){const v=clearanceLevel.value;return v==="None"||v==="Pending";}
+profileForm.addEventListener("submit",function(e){
+  const cs=document.getElementById("id_clearance_no").value.trim();
+  const dob=document.getElementById("id_date_of_birth").value.trim();
+  if(!cs&& !dob){e.preventDefault();alert("Please enter either a CSID number or your Date of Birth.");return;}
+  if(clearanceIsBlocked()){e.preventDefault();clearanceErrorModal.style.display="block";}
+});
+closeModalBtn.addEventListener("click",()=>clearanceErrorModal.style.display="none");
+document.getElementById("modalOverlay").addEventListener("click",()=>clearanceErrorModal.style.display="none");
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&clearanceErrorModal.style.display==="block"){
+  clearanceErrorModal.style.display="none"}});
 
-  // Form submission handler with clearance validation
-  profileForm.addEventListener('submit', function(event) {
-    if (clearanceIsPending()) {
-      event.preventDefault(); // Prevent the form from submitting
-      clearanceErrorModal.style.display = 'block'; // Show the error modal
-      return false;
-    }
-    return true; // Allow the form to submit
-  });
-
-  // Close modal when button is clicked
-  closeModalBtn.addEventListener('click', function() {
-    clearanceErrorModal.style.display = 'none';
-  });
-
-  // Close modal when clicking outside
-  document.getElementById('modalOverlay').addEventListener('click', function() {
-    clearanceErrorModal.style.display = 'none';
-  });
-
-  // Close modal with escape key
-  document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape' && clearanceErrorModal.style.display === 'block') {
-      clearanceErrorModal.style.display = 'none';
-    }
-  });
-
-  // Toggle the visibility of the email change UI immediately.
-  function toggleEmailInput() {
-    // Clear any pending timer when toggling.
-    if (emailCloseTimer) {
-      clearTimeout(emailCloseTimer);
-      emailCloseTimer = null;
-    }
-    const container = document.getElementById('email-form-container');
-    const displaySection = document.getElementById('email-display-section');
-    
-    if (container.style.display === 'none' || container.style.display === '') {
-      container.style.display = 'block';
-      displaySection.style.display = 'none';
-    } else {
-      container.style.display = 'none';
-      displaySection.style.display = 'block';
-      // Immediately clear messages and input values.
-      document.getElementById('email-form-message').innerHTML = '';
-      document.getElementById('id_new_email').value = '';
-    }
-  }
-
-  // Handle the email change request via AJAX.
-  document.getElementById('email-change-submit').addEventListener('click', function(e) {
-    const emailValue = document.getElementById('id_new_email').value;
-    const messageDiv = document.getElementById('email-form-message');
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    
-    const formData = new FormData();
-    formData.append('email', emailValue);
-    
-    fetch("{% url 'profile-emailchange' %}", {
-      method: 'POST',
-      body: formData,
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest',
-        'X-CSRFToken': csrfToken
-      }
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          // Display the verification message in green text at the bottom.
-          messageDiv.innerHTML = `<div class="text-green-600">${data.message}</div>`;
-          // Update the displayed email and verification status immediately.
-          document.getElementById('current-email').textContent = data.email;
-          const verificationStatus = document.getElementById('verification-status');
-          verificationStatus.textContent = 'Not verified';
-          verificationStatus.className = 'text-amber-500';
-          // Also ensure the "Send verification email" button is visible.
-          document.getElementById('verification-action').classList.remove('hidden');
-          // Auto-close the email change UI after 4 seconds.
-          emailCloseTimer = setTimeout(() => {
-            toggleEmailInput();
-            emailCloseTimer = null;
-          }, 4000);
-        } else {
-          messageDiv.innerHTML = `<div class="text-red-600">${data.message}</div>`;
-        }
-      })
-      .catch(error => {
-        messageDiv.innerHTML = '<div class="text-red-600">An error occurred. Please try again.</div>';
-        console.error('Error:', error);
-      });
-  });
-  
-  // Handle sending a verification email.
-  function sendVerificationEmail() {
-    fetch('{% url "profile-emailverify" %}', {
-      method: 'POST',
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest',
-        'X-CSRFToken': '{{ csrf_token }}'
-      }
-    })
-      .then(response => response.json())
-      .then(data => {
-        const verificationAction = document.getElementById('verification-action');
-        const tempMessage = document.createElement('div');
-        tempMessage.className = 'text-green-600 text-sm';
-        tempMessage.textContent = data.message;
-        const originalContent = verificationAction.innerHTML;
-        verificationAction.innerHTML = '';
-        verificationAction.appendChild(tempMessage);
-        setTimeout(() => {
-          verificationAction.innerHTML = originalContent;
-        }, 3000);
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('Failed to send verification email. Please try again.');
-      });
-  }
-
-  // Set placeholders for name fields on DOM load.
-  document.addEventListener('DOMContentLoaded', function() {
-    const firstName = document.getElementById('id_first_name');
-    if (firstName) { firstName.placeholder = 'Enter first name'; }
-    const middleName = document.getElementById('id_middle_name');
-    if (middleName) { middleName.placeholder = 'Enter middle name'; }
-    const lastName = document.getElementById('id_last_name');
-    if (lastName) { lastName.placeholder = 'Enter last name'; }
-  });
+/* placeholders */
+document.addEventListener("DOMContentLoaded",()=>{
+  const fn=document.getElementById("id_first_name");if(fn)fn.placeholder="Enter first name";
+  const mn=document.getElementById("id_middle_name");if(mn)mn.placeholder="Enter middle name";
+  const ln=document.getElementById("id_last_name");if(ln)ln.placeholder="Enter last name";});
 </script>
 {% endblock %}
