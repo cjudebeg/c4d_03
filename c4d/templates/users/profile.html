@@ -18,12 +18,14 @@
   <script src="https://unpkg.com/@popperjs/core@2"></script>
   <script src="https://unpkg.com/tippy.js@6"></script>
 
-  <!-- x-cloak + truncation -->
+  <!-- x-cloak + helpers -->
   <style>
     [x-cloak]{display:none!important}
     .text-truncate{max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block}
     @media(min-width:640px){.text-truncate{max-width:320px}}
     @media(min-width:768px){.text-truncate{max-width:380px}}
+    .toast-enter{opacity:1;transition:opacity .3s ease}
+    .toast-leave{opacity:0;transition:opacity .3s ease}
   </style>
 
   <!-- tooltip helper -->
@@ -42,11 +44,11 @@
   <p class="text-sm text-gray-600 mb-4">Fields marked with <span class="text-red-600">*</span> are required.</p>
 
   {% if profile.clearance_valid == "PENDING" %}
-    <div class="mb-6 p-4 bg-yellow-100 border border-yellow-400 text-yellow-800 rounded">
+    <div class="mb-6 p-4 bg-yellow-100 border border-yellow-400 text-yellow-800">
       You will be able to view available job opportunities once the clearance verification is complete.
     </div>
   {% elif profile.clearance_valid == "NO" %}
-    <div class="mb-6 p-4 bg-red-100 border border-red-400 text-red-800 rounded">
+    <div class="mb-6 p-4 bg-red-100 border border-red-400 text-red-800">
       We could not verify your clearance. Please contact administration.
     </div>
   {% endif %}
@@ -69,9 +71,7 @@
               class="{% if user.emailaddress_set.first and user.emailaddress_set.first.verified %}text-green-500{% else %}text-amber-500{% endif %} mt-1">
           {% if user.emailaddress_set.first and user.emailaddress_set.first.verified %}
             <span class="font-semibold">Verified</span>
-          {% else %}
-            Not verified
-          {% endif %}
+          {% else %}Not verified{% endif %}
         </span>
       </div>
       <div id="verification-action"
@@ -121,14 +121,14 @@
       </div>
       <div class="text-gray-700 mt-1">
         {% if profile.suburb and profile.state %}
-          {{ profile.suburb }},
+          {{ profile.suburb }}, 
           {% if profile.state == "NSW" or profile.state == "New South Wales" %}New South Wales
           {% elif profile.state == "VIC" or profile.state == "Victoria" %}Victoria
           {% elif profile.state == "QLD" or profile.state == "Queensland" %}Queensland
-          {% elif profile.state == "WA"  or profile.state == "Western Australia" %}Western Australia
-          {% elif profile.state == "SA"  or profile.state == "South Australia" %}South Australia
+          {% elif profile.state == "WA" or profile.state == "Western Australia" %}Western Australia
+          {% elif profile.state == "SA" or profile.state == "South Australia" %}South Australia
           {% elif profile.state == "TAS" or profile.state == "Tasmania" %}Tasmania
-          {% elif profile.state == "NT"  or profile.state == "Northern Territory" %}Northern Territory
+          {% elif profile.state == "NT" or profile.state == "Northern Territory" %}Northern Territory
           {% elif profile.state == "ACT" or profile.state == "Australian Capital Territory" %}Australian Capital Territory
           {% else %}{{ profile.state }}{% endif %}
         {% elif profile.suburb %}
@@ -137,10 +137,10 @@
           {% if profile.state == "NSW" or profile.state == "New South Wales" %}New South Wales
           {% elif profile.state == "VIC" or profile.state == "Victoria" %}Victoria
           {% elif profile.state == "QLD" or profile.state == "Queensland" %}Queensland
-          {% elif profile.state == "WA"  or profile.state == "Western Australia" %}Western Australia
-          {% elif profile.state == "SA"  or profile.state == "South Australia" %}South Australia
+          {% elif profile.state == "WA" or profile.state == "Western Australia" %}Western Australia
+          {% elif profile.state == "SA" or profile.state == "South Australia" %}South Australia
           {% elif profile.state == "TAS" or profile.state == "Tasmania" %}Tasmania
-          {% elif profile.state == "NT"  or profile.state == "Northern Territory" %}Northern Territory
+          {% elif profile.state == "NT" or profile.state == "Northern Territory" %}Northern Territory
           {% elif profile.state == "ACT" or profile.state == "Australian Capital Territory" %}Australian Capital Territory
           {% else %}{{ profile.state }}{% endif %}
         {% else %}
@@ -153,40 +153,42 @@
   <!-- Inline Personal Form -->
   <form id="personal-form" action="{% url 'profile_update_personal' %}" method="POST"
         style="display:none" class="border-b py-4"
-        x-data="{ openName:false, newFirst:'', newLast:'', reason:'', sending:false, feedback:'' }">
+        x-data="{
+          openName:false,
+          newFirst:'',
+          newMiddle:'',
+          newLast:'',
+          reason:'',
+          sending:false,
+          currentFirst:'{{ profile.first_name|default_if_none:''|escapejs }}',
+          currentMiddle:'{{ profile.middle_name|default_if_none:''|escapejs }}',
+          currentLast:'{{ profile.last_name|default_if_none:''|escapejs }}'
+        }">
     {% csrf_token %}
     <div class="mb-3 font-semibold text-lg">Edit Personal Information</div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700">
-          First name<span class="text-red-600">*</span>
-        </label>
-        <input readonly placeholder="Read only"
-               type="text" name="first_name" id="id_first_name_personal"
+        <label class="block text-sm font-medium text-gray-700">First name<span class="text-red-600">*</span></label>
+        <input readonly type="text" id="id_first_name_personal"
                value="{{ profile.first_name|default_if_none:'' }}"
                class="w-full border border-gray-300 px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed" required>
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700">Middle name</label>
-        <input readonly placeholder="Read only"
-               type="text" name="middle_name" id="id_middle_name_personal"
+        <input readonly type="text" id="id_middle_name_personal"
                value="{{ profile.middle_name|default_if_none:'' }}"
                class="w-full border border-gray-300 px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed">
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700">
-          Last name<span class="text-red-600">*</span>
-        </label>
-        <input readonly placeholder="Read only"
-               type="text" name="last_name" id="id_last_name_personal"
+        <label class="block text-sm font-medium text-gray-700">Last name<span class="text-red-600">*</span></label>
+        <input readonly type="text" id="id_last_name_personal"
                value="{{ profile.last_name|default_if_none:'' }}"
                class="w-full border border-gray-300 px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed" required>
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700">Suburb</label>
-        <input placeholder="Enter suburb"
-               type="text" name="suburb" id="id_suburb"
+        <input type="text" name="suburb" id="id_suburb" placeholder="Enter suburb"
                value="{{ profile.suburb|default_if_none:'' }}"
                class="w-full border border-gray-300 px-3 py-2 bg-gray-200">
       </div>
@@ -209,8 +211,10 @@
 
     <!-- Name-change request -->
     <button type="button"
+            x-show="!openName"
+            x-cloak
             class="bg-blue-500 text-white px-4 py-2 mb-4"
-            @click="openName=!openName">
+            @click="openName = true">
       Request Name Change
     </button>
 
@@ -221,17 +225,20 @@
               class="ml-2 text-blue-500 cursor-pointer">(i)</span>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700">New first name</label>
-          <input x-model="newFirst"
-                 type="text"
+          <label class="block text-sm font-medium text-gray-700">New first name<span class="text-red-600">*</span></label>
+          <input x-model="newFirst" type="text"
                  class="w-full border border-gray-300 px-3 py-2 bg-white">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700">New last name</label>
-          <input x-model="newLast"
-                 type="text"
+          <label class="block text-sm font-medium text-gray-700">New middle name</label>
+          <input x-model="newMiddle" type="text"
+                 class="w-full border border-gray-300 px-3 py-2 bg-white">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">New last name<span class="text-red-600">*</span></label>
+          <input x-model="newLast" type="text"
                  class="w-full border border-gray-300 px-3 py-2 bg-white">
         </div>
       </div>
@@ -245,29 +252,48 @@
                 class="bg-green-600 text-white px-4 py-2"
                 :disabled="sending"
                 @click="
-                  if(!newFirst && !newLast){feedback='Enter a new name.';return}
-                  if(!reason){feedback='Provide a reason.';return}
+                  const f=newFirst.trim();
+                  const l=newLast.trim();
+                  if(!f || !l){
+                    showToast('Both first and last names are required.');
+                    return;
+                  }
+                  /* block only if first, middle & last are all unchanged */
+                  if(f.toLowerCase()===currentFirst.toLowerCase() &&
+                     l.toLowerCase()===currentLast.toLowerCase() &&
+                     newMiddle.trim().toLowerCase()===currentMiddle.toLowerCase()){
+                    showToast('New name must differ from current name.');
+                    return;
+                  }
+                  if(!reason.trim()){
+                    showToast('Please provide a reason for the name change.');
+                    return;
+                  }
                   sending=true;
                   const csrf=document.querySelector('[name=csrfmiddlewaretoken]').value;
                   fetch('{% url 'profile_request_name_change' %}',{
                     method:'POST',
                     headers:{'X-CSRFToken':csrf,'X-Requested-With':'XMLHttpRequest'},
-                    body:new URLSearchParams({new_first:newFirst,new_last:newLast,reason:reason})
+                    body:new URLSearchParams({
+                      new_first:f,
+                      new_middle:newMiddle.trim(),
+                      new_last:l,
+                      reason:reason.trim()
+                    })
                   }).then(r=>r.json()).then(d=>{
-                      feedback=d.message;
-                      if(d.success){openName=false; newFirst=''; newLast=''; reason='';}
-                  }).catch(()=>{feedback='Error sending request.'})
+                      showToast(d.message);
+                      if(d.success){ openName=false; newFirst=''; newMiddle=''; newLast=''; reason=''; }
+                  }).catch(()=>{ showToast('Error sending request.'); })
                     .finally(()=>sending=false);
                 ">
           Send Request
         </button>
         <button type="button"
                 class="bg-gray-500 text-white px-4 py-2"
-                @click="openName=false;feedback=''">
+                @click="openName = false">
           Cancel
         </button>
       </div>
-      <div class="text-sm mt-2" x-text="feedback"></div>
     </div>
 
     <div class="flex space-x-2">
@@ -282,9 +308,6 @@
   <div class="border-b py-4 w-full">
     <div class="flex justify-between items-center mb-3">
       <h3 class="font-semibold text-lg">Security Clearance</h3>
-      <!-- <button id="security-edit-btn"
-              onclick="toggleSection('security')"
-              class="text-blue-600 font-medium hover:underline">EDIT</button> -->
     </div>
 
     <div id="security-display">
@@ -296,7 +319,6 @@
         {% if profile.clearance_valid == "YES" %}
           <span class="text-green-500 font-semibold">Valid</span>
         {% elif profile.clearance_valid == "PENDING" %}
-          <!-- pending -->
         {% else %}
           <span class="text-red-500 font-semibold">Invalid</span>
         {% endif %}
@@ -329,8 +351,7 @@
 
     <div class="mb-4">
       <label class="block text-sm font-medium text-gray-700">CSID Number</label>
-      <input readonly placeholder="Read only"
-             type="text"
+      <input readonly type="text"
              value="{% if profile.clearance_no %}{{ profile.clearance_no }}{% else %}Not provided{% endif %}"
              class="w-full border border-gray-300 px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed">
     </div>
@@ -339,10 +360,9 @@
       <label for="id_clearance_level" class="block text-sm font-medium text-gray-700">
         AGSVA Level
       </label>
-      <!-- not required & disabled -->
       <select name="clearance_level" id="id_clearance_level" disabled
               class="w-full border border-gray-300 px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed">
-        <option value=""  {% if not profile.clearance_level %}selected{% endif %}>Select clearance level</option>
+        <option value="" {% if not profile.clearance_level %}selected{% endif %}>Select clearance level</option>
         <option value="None"     {% if profile.clearance_level == "None"     %}selected{% endif %}>None</option>
         <option value="Pending"  {% if profile.clearance_level == "Pending"  %}selected{% endif %}>Pending</option>
         <option value="Baseline" {% if profile.clearance_level == "Baseline" %}selected{% endif %}>Baseline</option>
@@ -352,7 +372,6 @@
       </select>
     </div>
 
-    <!-- Save / Cancel stay for future editable fields but do nothing to AGSVA Level -->
     <div class="flex space-x-2">
       <button type="submit" class="bg-blue-500 text-white px-4 py-2">Save</button>
       <button type="button"
@@ -386,9 +405,6 @@
           No skills selected
         {% endif %}
       </div>
-      <!-- <div class="text-gray-700 mt-1">
-        {% if profile.skill_level %}{{ profile.skill_level }}{% else %}No skill level{% endif %}
-      </div> -->
     </div>
   </div>
 
@@ -474,17 +490,6 @@
       </template>
     </div>
 
-    <!-- <div class="mt-4">
-      <label for="id_skill_level" class="block text-sm font-medium text-gray-700 mb-1">Skill Level</label>
-      <select name="skill_level" id="id_skill_level"
-              class="w-full border border-gray-300 px-3 py-2 bg-gray-200">
-        <option value="">Select experience level</option>
-        <option value="Junior" {% if profile.skill_level == "Junior" %}selected{% endif %}>Junior</option>
-        <option value="Mid"    {% if profile.skill_level == "Mid"    %}selected{% endif %}>Mid</option>
-        <option value="Senior" {% if profile.skill_level == "Senior" %}selected{% endif %}>Senior</option>
-      </select>
-    </div> -->
-
     <div class="flex space-x-2 mt-4">
       <button type="submit" class="bg-blue-500 text-white px-4 py-2">Save</button>
       <button type="button"
@@ -504,6 +509,21 @@
 
 <!-- ========== JS helpers ========== -->
 <script>
+  function showToast(msg){
+    const t=document.createElement('div');
+    t.className='toast-enter fixed top-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-4 py-2 shadow-lg z-50 flex items-center';
+    const span=document.createElement('span');
+    span.textContent=msg;
+    const btn=document.createElement('button');
+    btn.innerHTML='&times;';
+    btn.className='ml-4 font-bold';
+    btn.onclick=()=>{t.remove()};
+    t.appendChild(span); t.appendChild(btn);
+    document.body.appendChild(t);
+    setTimeout(()=>{t.classList.replace('toast-enter','toast-leave');},4000);
+    setTimeout(()=>t.remove(),4500);
+  }
+
   let currentOpenSection=null;
 
   function toggleSection(section,cancel=false){
@@ -580,15 +600,8 @@
       method:'POST',
       headers:{'X-Requested-With':'XMLHttpRequest','X-CSRFToken':'{{ csrf_token }}'}
     }).then(r=>r.json()).then(d=>{
-      const va=document.getElementById('verification-action');
-      const tmp=document.createElement('div');
-      tmp.className='text-green-600 text-sm';
-      tmp.textContent=d.message;
-      const orig=va.innerHTML;
-      va.innerHTML='';
-      va.appendChild(tmp);
-      setTimeout(()=>{va.innerHTML=orig},3000);
-    }).catch(()=>{alert('Failed to send verification email. Please try again.');});
+      showToast(d.message);
+    }).catch(()=>{showToast('Failed to send verification email. Please try again.');});
   }
 
   document.addEventListener('DOMContentLoaded',()=>{

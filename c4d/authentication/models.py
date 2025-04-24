@@ -1,17 +1,14 @@
-# users/models.py
-# -*- coding: utf-8 -*-
 """
-Full models file for the users app.
-Adds four “pending-name-change” fields directly on Profile so requests are
-stored with the profile itself (no extra table).
+Adds pending-name-change fields directly on Profile so requests are
+stored with the profile.
 """
 
 import uuid
-from django.conf                  import settings
-from django.contrib.auth.models   import AbstractUser
-from django.db                    import models
-from django.utils.translation     import gettext_lazy as _
-from .managers                    import CustomUserManager
+from django.conf                import settings
+from django.contrib.auth.models import AbstractUser
+from django.db                  import models
+from django.utils.translation   import gettext_lazy as _
+from .managers                  import CustomUserManager
 
 
 STATE_CHOICES: list[tuple[str, str]] = [
@@ -43,12 +40,12 @@ class CustomUser(AbstractUser):
     username = None
     email    = models.EmailField(_("email address"), unique=True)
 
-    USERNAME_FIELD  = "email"
+    USERNAME_FIELD   = "email"
     REQUIRED_FIELDS: list[str] = []
 
     objects = CustomUserManager()
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:   # pragma: no cover
         return self.email
 
 
@@ -92,23 +89,26 @@ class Profile(models.Model):
 
     # pending-name-change (no extra table)
     pending_first_name     = models.CharField(max_length=30, blank=True, null=True)
+    pending_middle_name    = models.CharField(max_length=30, blank=True, null=True)  # ← NEW
     pending_last_name      = models.CharField(max_length=30, blank=True, null=True)
     pending_name_reason    = models.TextField(blank=True, null=True)
     pending_name_requested = models.DateTimeField(blank=True, null=True)
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:   # pragma: no cover
         return f"Profile of {self.user.email}"
 
     def clear_pending_name(self) -> None:
         """
-        Helper so admins can clear the request quickly.
+        Helper so admins can clear a request quickly.
         """
-        self.pending_first_name     = None
-        self.pending_last_name      = None
-        self.pending_name_reason    = None
+        self.pending_first_name  = None
+        self.pending_middle_name = None
+        self.pending_last_name   = None
+        self.pending_name_reason = None
         self.pending_name_requested = None
         self.save(update_fields=[
             "pending_first_name",
+            "pending_middle_name",
             "pending_last_name",
             "pending_name_reason",
             "pending_name_requested",

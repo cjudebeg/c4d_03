@@ -6,12 +6,12 @@ from .forms  import CustomUserChangeForm
 
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
-    form         = CustomUserChangeForm
-    model        = CustomUser
-    list_display = ("email", "is_staff", "is_active")
-    list_filter  = ("is_staff", "is_active")
+    form          = CustomUserChangeForm
+    model         = CustomUser
+    list_display  = ("email", "is_staff", "is_active")
+    list_filter   = ("is_staff", "is_active")
     search_fields = ("email",)
-    ordering     = ("email",)                # ← order by email, username no longer exists
+    ordering      = ("email",)          # username field removed
 
     fieldsets = (
         (None,              {"fields": ("email", "password")}),
@@ -30,8 +30,8 @@ class CustomUserAdmin(UserAdmin):
 
 
 class PendingNameFilter(admin.SimpleListFilter):
-    title            = "Pending name change"
-    parameter_name   = "pending_name_requested"
+    title          = "Pending name change"
+    parameter_name = "pending_name_requested"
 
     def lookups(self, request, model_admin):
         return [
@@ -60,6 +60,7 @@ class ProfileAdmin(admin.ModelAdmin):
         "clearance_active",
         "clearance_level",
         "pending_first_name",
+        "pending_middle_name",
         "pending_last_name",
         "pending_name_reason",
         "pending_name_requested",
@@ -74,24 +75,25 @@ class ProfileAdmin(admin.ModelAdmin):
     readonly_fields = (
         "user",
         "pending_first_name",
+        "pending_middle_name",
         "pending_last_name",
         "pending_name_reason",
         "pending_name_requested",
     )
 
     fieldsets = (
-        (None,        {"fields": ("user",)}),
-        ("Personal",  {"fields": ("first_name", "middle_name", "last_name", "state", "suburb")}),
+        (None,       {"fields": ("user",)}),
+        ("Personal", {"fields": ("first_name", "middle_name", "last_name", "state", "suburb")}),
         ("Clearance", {"fields": (
             ("clearance_no", "clearance_level"),
             ("clearance_valid", "clearance_active"),
             "clearance_revalidation",
         )}),
-        ("Skills",    {"fields": ("skill_sets", "skill_level")}),
+        ("Skills", {"fields": ("skill_sets", "skill_level")}),
         ("Pending name-change request", {
-            # always visible so admin can act on it immediately
             "fields": (
                 "pending_first_name",
+                "pending_middle_name",
                 "pending_last_name",
                 "pending_name_reason",
                 "pending_name_requested",

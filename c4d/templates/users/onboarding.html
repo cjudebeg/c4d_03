@@ -7,7 +7,7 @@
   <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-  <!-- Alpine.js scripts – CORE MUST LOAD LAST -->
+  <!-- Alpine.js scripts -->
   <script defer src="https://unpkg.com/@alpinejs/ui@3.14.9/dist/cdn.min.js"></script>
   <script defer src="https://unpkg.com/@alpinejs/focus@3.14.9/dist/cdn.min.js"></script>
   <script defer src="https://unpkg.com/alpinejs@3.14.9/dist/cdn.min.js"></script>
@@ -243,7 +243,7 @@
 </div>
 
 <script>
-/* ---------------- email helpers (unchanged) ---------------- */
+/* ---------------- email helpers ---------------- */
 let emailCloseTimer=null;
 function toggleEmailInput(){if(emailCloseTimer){clearTimeout(emailCloseTimer);emailCloseTimer=null}
 const c=document.getElementById("email-form-container");const d=document.getElementById("email-display-section");

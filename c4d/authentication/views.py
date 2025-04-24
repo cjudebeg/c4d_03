@@ -19,6 +19,8 @@ from django.core.mail               import send_mail
 from django.http                    import JsonResponse
 from django.views.decorators.http   import require_POST
 from django.utils                   import timezone
+from django.http                    import JsonResponse, HttpResponseBadRequest
+
 
 from allauth.account.utils  import send_email_confirmation
 from allauth.account.views  import SignupView
@@ -271,40 +273,45 @@ def update_personal_view(request):
 @require_POST
 def request_name_change_view(request):
     """
-    Store name-change request directly on the user's Profile so staff
-    can see it in the Django-admin without any extra model.
+    AJAX endpoint to capture a user’s name-change request, now including middle name.
     """
-    new_first = request.POST.get("new_first", "").strip()
-    new_last  = request.POST.get("new_last",  "").strip()
-    reason    = request.POST.get("reason",    "").strip()
+    # Only accept POSTs over XHR
+    if request.method == "POST" and request.headers.get("x-requested-with") == "XMLHttpRequest":
+        new_first  = request.POST.get("new_first",  "").strip()
+        new_middle = request.POST.get("new_middle", "").strip()
+        new_last   = request.POST.get("new_last",   "").strip()
+        reason     = request.POST.get("reason",     "").strip()
 
-    if not (new_first or new_last):
-        return JsonResponse({"success": False, "message": "Please enter a new name."})
-    if not reason:
-        return JsonResponse({"success": False, "message": "Please provide a reason."})
+        # First & last are mandatory
+        if not new_first or not new_last:
+            return JsonResponse({
+                "success": False,
+                "message": "Both first and last names are required."
+            })
 
-    profile = request.user.profile
-    profile.pending_first_name     = new_first or None
-    profile.pending_last_name      = new_last  or None
-    profile.pending_name_reason    = reason
-    profile.pending_name_requested = timezone.now()
-    profile.save(update_fields=[
-        "pending_first_name",
-        "pending_last_name",
-        "pending_name_reason",
-        "pending_name_requested",
-    ])
+        # Get the user’s profile
+        profile = request.user.profile
 
-    # optional – still alert site admins by e-mail
-    from django.core.mail import mail_admins
-    subject = f"Name-change request from {request.user.email}"
-    body    = (
-        f"Current name: {profile.first_name} {profile.last_name}\n"
-        f"Requested: {new_first} {new_last}\n\nReason:\n{reason}"
-    )
-    mail_admins(subject, body, fail_silently=True)
+        # Save all four pending fields
+        profile.pending_first_name     = new_first
+        profile.pending_middle_name    = new_middle   # ← newly‐added
+        profile.pending_last_name      = new_last
+        profile.pending_name_reason    = reason
+        profile.pending_name_requested = timezone.now()
+        profile.save(update_fields=[
+            "pending_first_name",
+            "pending_middle_name",
+            "pending_last_name",
+            "pending_name_reason",
+            "pending_name_requested",
+        ])
 
-    return JsonResponse({"success": True, "message": "Request saved – administration will review it."})
+        return JsonResponse({
+            "success": True,
+            "message": "Your name‐change request has been submitted."
+        })
+
+    return HttpResponseBadRequest("Invalid request")
 
 
 @login_required
