@@ -7,6 +7,7 @@
 body {
   @apply bg-gray-50 text-gray-900;
   font-family: "Inter", sans-serif;
+  font-feature-settings: "liga" 1, "calt" 1;
 }
 
 header {
@@ -26,4 +27,10 @@ a:hover {
 
 footer {
   @apply bg-gray-800 text-white p-4 text-center;
+}
+
+@theme {
+  --font-script: Oxygen, sans-serif;
+  --font-body: Inter, sans-serif;
+  --font-heading: Outfit, sans-serif;
 }

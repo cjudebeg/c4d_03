@@ -5,34 +5,35 @@
 {% include 'includes/header.html' %}
 
 {% block layout %}
-<div class="max-w-4xl mx-auto p-8">
-  <h1 class="text-3xl font-bold mb-6">Landing page of C4 Defence</h1>
-  <p class="mb-6">
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+
+<div class="flex flex-wrap md:flex-col mt-28 md:max-w-6xl mx-auto p-8 mb-28">
+  <h1 class="font-heading text-6xl font-bold mb-8">Welcome</h1>
+  <p class="text-2xl sm:w-6/7 md:w-5/7 lg:w-2/3">
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
     Proin ultrices dui nec dui sollicitudin accumsan.
     Curabitur et odio quis ante tincidunt sodales eget nec lorem.
   </p>
 
   <!-- Job tiles -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-    <div class="bg-white shadow p-4">
-      <h2 class="text-lg font-semibold">Web Developer</h2>
-      <p class="text-sm text-gray-600 mb-2">Location: Melbourne</p>
-      <p class="text-sm text-gray-700">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-28 grow">
+    <div class="bg-white shadow p-4 ">
+      <h2 class="text-2xl font-semibold">Cyber Analyst</h2>
+      <p class="text-sm text-gray-600 my-6">Location: Melbourne</p>
+      <p class="text-sm text-gray-700 my-6">
         Lorem ipsum dolor sit amet, consectetur adipiscing elit.
       </p>
     </div>
     <div class="bg-white shadow p-4">
-      <h2 class="text-lg font-semibold">Engineer</h2>
-      <p class="text-sm text-gray-600 mb-2">Location: Brisbane</p>
-      <p class="text-sm text-gray-700">
+      <h2 class="text-2xl font-semibold">Fitter & Turner</h2>
+      <p class="text-sm text-gray-600 my-6">Location: Brisbane</p>
+      <p class="text-sm text-gray-700 my-6">
         Proin ultrices dui nec dui sollicitudin accumsan.
       </p>
     </div>
     <div class="bg-white shadow p-4">
-      <h2 class="text-lg font-semibold">Pilot</h2>
-      <p class="text-sm text-gray-600 mb-2">Location: Sydney</p>
-      <p class="text-sm text-gray-700">
+      <h2 class="text-2xl font-semibold">Sonar Operator</h2>
+      <p class="text-sm text-gray-600 my-6">Location: Sydney</p>
+      <p class="text-sm text-gray-700 my-6">
         Curabitur et odio quis ante tincidunt sodales eget nec lorem.
       </p>
     </div>
@@ -43,4 +44,104 @@
     <a href="{% url 'account_signup' %}" class="bg-green-500 text-white px-4 py-2 rounded">Register</a>
   </div> -->
 </div>
+
+
+
+<div class="bg-gray-50 flex mb-40 md:max-w-6xl mx-auto p-4">
+  <div class="">
+    <h2 class="font-heading text-5xl font-medium mb-8 p-4">Questions?</h2>
+    <!-- <h1 class="font-medium max-w-xl mx-auto pt-10 pb-4">Smooth Accordion</h1> -->
+    <div class="max-w-7xl mx-auto " x-data="{selected:null}">
+      <ul class="">
+
+        <li class="relative border-b border-gray-300">
+
+          <button type="button" class="w-full px-4 py-4 text-2xl text-left"
+            @click="selected !== 1 ? selected = 1 : selected = null">
+            <div class="flex items-center justify-between">
+              <span>Do I need a security clearance to join? </span>
+              <span class="ico-plus"></span>
+            </div>
+          </button>
+
+          <div class="relative overflow-hidden transition-all max-h-0 duration-700" x-ref="container1"
+            x-bind:style="selected == 1 ? 'max-height: ' + $refs.container1.scrollHeight + 'px' : ''">
+            <div class="text-md p-4">
+              <p>Proin ultrices dui nec dui sollicitudin accumsan. Curabitur et odio quis ante tincidunt sodales eget
+                nec lorem.</p><br>
+              <p> Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin ultrices dui nec dui sollicitudin
+                accumsan. Curabitur et odio quis ante tincidunt sodales eget nec loremr.</p><br>
+              <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin ultrices dui nec dui sollicitudin
+                accumsan.</p>
+            </div>
+          </div>
+
+        </li>
+
+
+        <li class="relative border-b border-gray-300">
+
+          <button type="button" class="w-full px-4 py-4  text-2xl text-left"
+            @click="selected !== 2 ? selected = 2 : selected = null">
+            <div class="flex items-center justify-between">
+              <span>
+                Will I find contract based roles on this site? </span>
+              <span class="ico-plus"></span>
+            </div>
+          </button>
+
+          <div class="relative overflow-hidden transition-all max-h-0 duration-700" x-ref="container2"
+            x-bind:style="selected == 2 ? 'max-height: ' + $refs.container2.scrollHeight + 'px' : ''">
+            <div class="p-4">
+              <p>Proin ultrices dui nec dui sollicitudin accumsan. Curabitur et odio quis ante tincidunt sodales eget
+                nec lorem.</p><br>
+              <p> Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin ultrices dui nec dui sollicitudin
+                accumsan. Curabitur et odio quis ante tincidunt sodales eget nec loremr.</p><br>
+              <p>Lorem ipsum dolor sit amet, Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin ultrices dui
+                nec dui sollicitudin
+                accumsan.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin ultrices dui nec dui
+                sollicitudin
+                accumsan.consectetur adipiscing elit. Proin ultrices dui nec dui sollicitudin
+                accumsan.</p>
+            </div>
+          </div>
+
+        </li>
+
+
+        <li class="relative border-b border-gray-300">
+
+          <button type="button" class="w-full px-4 py-4  text-2xl text-left"
+            @click="selected !== 3 ? selected = 3 : selected = null">
+            <div class="flex items-center justify-between">
+              <span>
+                Are there any hidden costs to using this site?</span>
+              <span class="ico-plus"></span>
+            </div>
+          </button>
+
+          <div class="relative overflow-hidden transition-all max-h-0 duration-700" x-ref="container3"
+            x-bind:style="selected == 3 ? 'max-height: ' + $refs.container3.scrollHeight + 'px' : ''">
+            <div class="p-6">
+              <p>Proin ultrices dui nec dui sollicitudin accumsan. Curabitur et odio quis ante tincidunt sodales eget
+                nec ipsum dolor sit amet, consectetur adipiscing elit.</p><br>
+              <p>Proin ultrices dui nec dui sollicitudin
+                accumsan.consectetur adipiscing elit. Proin ultrices dui nec dui sollicitudin
+                accumsan.</p>
+
+            </div>
+          </div>
+
+        </li>
+
+      </ul>
+    </div>
+  </div>
+</div>
+<div>
+  <div class="block h-80 w-screen bg-gradient-to-r from-slate-900/80 to bg-gray-800">
+  </div>
+
+</div>
+
 {% endblock %}

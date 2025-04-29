@@ -4,156 +4,240 @@
 
 {% block content %}
 <div class="w-full">
-  <!-- Tailwind & Font Awesome -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
+    <!-- External libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script defer src="https://unpkg.com/@alpinejs/ui@3.14.9/dist/cdn.min.js"></script>
+    <script defer src="https://unpkg.com/@alpinejs/focus@3.14.9/dist/cdn.min.js"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.14.9/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="https://unpkg.com/tippy.js@6"></script>
 
-  <!-- Alpine.js – core last -->
-  <script defer src="https://unpkg.com/@alpinejs/ui@3.14.9/dist/cdn.min.js"></script>
-  <script defer src="https://unpkg.com/@alpinejs/focus@3.14.9/dist/cdn.min.js"></script>
-  <script defer src="https://unpkg.com/alpinejs@3.14.9/dist/cdn.min.js"></script>
+    <!-- Styles -->
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
 
-  <!-- Tippy.js -->
-  <script src="https://unpkg.com/@popperjs/core@2"></script>
-  <script src="https://unpkg.com/tippy.js@6"></script>
+        .text-truncate {
+            max-width: 240px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: inline-block;
+        }
 
-  <!-- x-cloak + helpers -->
-  <style>
-    [x-cloak]{display:none!important}
-    .text-truncate{max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block}
-    @media(min-width:640px){.text-truncate{max-width:320px}}
-    @media(min-width:768px){.text-truncate{max-width:380px}}
-    .toast-enter{opacity:1;transition:opacity .3s ease}
-    .toast-leave{opacity:0;transition:opacity .3s ease}
-  </style>
+        @media(min-width:640px) {
+            .text-truncate {
+                max-width: 320px;
+            }
+        }
 
-  <!-- tooltip helper -->
-  <script>
-    document.addEventListener('alpine:init', () => {
-      Alpine.magic('tooltip', el => msg => {
-        const t=tippy(el,{content:msg,trigger:'manual'}); t.show();
-        setTimeout(()=>{t.hide(); setTimeout(()=>t.destroy(),150)},2000);
-      });
-      Alpine.directive('tooltip',(el,{expression})=>{ tippy(el,{content:expression}) });
-    });
-  </script>
+        @media(min-width:768px) {
+            .text-truncate {
+                max-width: 380px;
+            }
+        }
 
-  <!-- PAGE HEADER -->
-  <h2 class="text-2xl font-bold mb-1 lg:mb-2">Profile</h2>
-  <p class="text-sm text-gray-600 mb-4">Fields marked with <span class="text-red-600">*</span> are required.</p>
+        .toast-enter {
+            opacity: 1;
+            transition: opacity .3s ease;
+        }
 
-  {% if profile.clearance_valid == "PENDING" %}
-    <div class="mb-6 p-4 bg-yellow-100 border border-yellow-400 text-yellow-800">
-      You will be able to view available job opportunities once the clearance verification is complete.
-    </div>
-  {% elif profile.clearance_valid == "NO" %}
-    <div class="mb-6 p-4 bg-red-100 border border-red-400 text-red-800">
-      We could not verify your clearance. Please contact administration.
-    </div>
-  {% endif %}
+        .toast-leave {
+            opacity: 0;
+            transition: opacity .3s ease;
+        }
 
-  <!-- ===================== ACCOUNT ===================== -->
-  <div class="border-b py-4 w-full">
-    <div class="flex justify-between items-center mb-3">
-      <h3 class="font-semibold text-lg">Account</h3>
-      <button id="toggle-email-btn" onclick="toggleEmailInput()"
-              class="text-blue-600 font-medium hover:underline">EDIT</button>
-    </div>
+        .required-star {
+            color: #dc2626;
+            margin-left: 0.15rem;
+        }
+    </style>
 
-    <div id="email-display-section" class="mb-4">
-      <div class="flex flex-col">
-        <span id="current-email" class="text-gray-700 text-truncate"
-              title="{% if user.email %}{{ user.email }}{% else %}Not provided{% endif %}">
-          {% if user.email %}{{ user.email }}{% else %}Not provided{% endif %}
-        </span>
-        <span id="verification-status"
-              class="{% if user.emailaddress_set.first and user.emailaddress_set.first.verified %}text-green-500{% else %}text-amber-500{% endif %} mt-1">
-          {% if user.emailaddress_set.first and user.emailaddress_set.first.verified %}
-            <span class="font-semibold">Verified</span>
-          {% else %}Not verified{% endif %}
-        </span>
-      </div>
-      <div id="verification-action"
-           class="{% if user.emailaddress_set.first and user.emailaddress_set.first.verified %}hidden{% else %}block{% endif %} mt-2">
-        <button type="button" onclick="sendVerificationEmail()"
-                class="text-blue-600 hover:text-blue-800 font-medium text-sm bg-transparent p-0">
-          Send verification email
-        </button>
-      </div>
-    </div>
+    <!-- Alpine.js tooltip helper -->
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.magic('tooltip', el => msg => {
+                const tooltip = tippy(el, { content: msg, trigger: 'manual' });
+                tooltip.show();
+                setTimeout(() => {
+                    tooltip.hide();
+                    setTimeout(() => tooltip.destroy(), 150);
+                }, 2000);
+            });
+            Alpine.directive('tooltip', (el, { expression }) => {
+                tippy(el, { content: expression });
+            });
+        });
+    </script>
 
-    <div id="email-form-container" style="display:none" class="mb-6">
-      {% csrf_token %}
-      <div class="flex flex-col space-y-2">
-        <input id="id_new_email" type="email" name="new_email" required
-               placeholder="Enter new email address"
-               class="bg-white px-3 py-2 border border-gray-300 w-full bg-gray-200">
-        <div class="flex space-x-2">
-          <button id="email-change-submit" type="button"
-                  class="bg-blue-500 text-white px-4 py-2 text-sm">Update</button>
-          <button type="button" onclick="toggleEmailInput()"
-                  class="bg-gray-500 text-white px-4 py-2 text-sm">Cancel</button>
+    <!-- Page Header -->
+
+    <h2 class="text-2xl font-bold mb-4 lg:mb-6">Profile</h2>
+    <div class="flex justify-between flex-col md:flex-row">
+        <p class="text-sm text-gray-600 mb-3">Fields marked with <span class="required-star">*</span> are required.</p>
+
+        {% if profile.clearance_valid == "PENDING" %}
+        <div class="mb-16 border border-amber-200 bg-orange-100 p-4 text-sm text-wrap max-w-lg">
+            You will be able to view available job opportunities once the clearance verification is complete.
         </div>
-      </div>
-      <div id="email-form-message" class="mt-2 text-sm"></div>
+    </div>
+    {% elif profile.clearance_valid == "NO" %}
+    <div class="mb-6 p-4 bg-red-100 border border-red-400 text-red-800 rounded">
+        We could not verify your clearance. Please contact administration.
     </div>
 
-    <div class="flex">
-      <a href="{% url 'account_change_password' %}"
-         class="text-blue-600 hover:text-blue-800 font-medium text-sm">Change password</a>
-    </div>
-  </div>
+    {% endif %}
 
-  <!-- ===================== PERSONAL ===================== -->
-  <div class="border-b py-4 w-full">
-    <div class="flex justify-between items-center mb-3">
-      <h3 class="font-semibold text-lg">Personal</h3>
-      <button id="personal-edit-btn" onclick="toggleSection('personal')"
-              class="text-blue-600 font-medium hover:underline">EDIT</button>
+    <!-- ===================== ACCOUNT SECTION ===================== -->
+    <div class="border-t border-b border-gray-200 py-6">
+        <div class="lg:grid lg:grid-cols-4">
+            <div class="col-span-1 mb-4 lg:mb-0 invisible lg:visible">
+                <h3 class="text-lg font-semibold">Account</h3>
+            </div>
+            <div class="col-span-3">
+                <div class="flex justify-between items-center mb-3 lg:hidden">
+                    <h3 class="text-lg font-semibold">Account</h3>
+                    <button id="toggle-email-btn" onclick="toggleEmailInput()"
+                        class="text-blue-600 font-medium hover:underline">
+                        <svg class="justify-end" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                            fill="#1f1f1f" viewBox="0 -960 960 960">
+                            <path
+                                d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="hidden lg:flex lg:justify-end lg:mb-3">
+                    <button id="toggle-email-btn-lg" onclick="toggleEmailInput()"
+                        class="text-blue-600 font-medium hover:underline"> <svg xmlns="http://www.w3.org/2000/svg"
+                            width="24" height="24" fill="#1f1f1f" viewBox="0 -960 960 960">
+                            <path
+                                d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z" />
+                        </svg></button>
+                </div>
+
+                <!-- Email Display -->
+                <div id="email-display-section" class="mb-4">
+                    <div class="flex flex-col">
+                        <span id="current-email" class="text-gray-700 text-truncate"
+                            title="{% if user.email %}{{ user.email }}{% else %}Not provided{% endif %}">
+                            {% if user.email %}{{ user.email }}{% else %}Not provided{% endif %}
+                        </span>
+                        <span id="verification-status"
+                            class="{% if user.emailaddress_set.first and user.emailaddress_set.first.verified %}text-green-500{% else %}text-amber-500{% endif %} mt-1">
+                            {% if user.emailaddress_set.first and user.emailaddress_set.first.verified %}
+                            <span class="font-semibold">Verified</span>
+                            {% else %}Not verified{% endif %}
+                        </span>
+                    </div>
+                    <div id="verification-action"
+                        class="{% if user.emailaddress_set.first and user.emailaddress_set.first.verified %}hidden{% else %}block{% endif %} mt-2">
+                        <button type="button" onclick="sendVerificationEmail()"
+                            class="text-blue-600 hover:text-blue-800 font-medium text-sm bg-transparent p-0">
+                            Send verification email
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Email Change Form -->
+                <div id="email-form-container" style="display:none" class="mb-6">
+                    {% csrf_token %}
+                    <div class="flex flex-col space-y-2">
+                        <input id="id_new_email" type="email" name="new_email" required
+                            placeholder="Enter new email address"
+                            class="bg-gray-200 px-3 py-2 border border-gray-300 w-full sm:w-3/4 md:max-w-md">
+                        <div class="flex space-x-2">
+                            <button id="email-change-submit" type="button"
+                                class="bg-blue-500 text-white px-4 py-2 text-sm">Update</button>
+                            <button type="button" onclick="toggleEmailInput()"
+                                class="bg-gray-500 text-white px-4 py-2 text-sm">Cancel</button>
+                        </div>
+                    </div>
+                    <div id="email-form-message" class="mt-2 text-sm"></div>
+                </div>
+
+                <!-- Change Password Link -->
+                <div class="flex justify-end">
+                    <a href="{% url 'account_change_password' %}"
+                        class="text-blue-600 hover:text-blue-800 font-medium text-sm">
+                        Change password
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div id="personal-display">
-      <div class="text-gray-700">
-        {% if profile.first_name %}{{ profile.first_name }}{% else %}Not provided{% endif %}
-        {% if profile.middle_name %} {{ profile.middle_name }}{% endif %}
-        {% if profile.last_name %} {{ profile.last_name }}{% else %}Not provided{% endif %}
-      </div>
-      <div class="text-gray-700 mt-1">
-        {% if profile.suburb and profile.state %}
-          {{ profile.suburb }}, 
-          {% if profile.state == "NSW" or profile.state == "New South Wales" %}New South Wales
-          {% elif profile.state == "VIC" or profile.state == "Victoria" %}Victoria
-          {% elif profile.state == "QLD" or profile.state == "Queensland" %}Queensland
-          {% elif profile.state == "WA" or profile.state == "Western Australia" %}Western Australia
-          {% elif profile.state == "SA" or profile.state == "South Australia" %}South Australia
-          {% elif profile.state == "TAS" or profile.state == "Tasmania" %}Tasmania
-          {% elif profile.state == "NT" or profile.state == "Northern Territory" %}Northern Territory
-          {% elif profile.state == "ACT" or profile.state == "Australian Capital Territory" %}Australian Capital Territory
-          {% else %}{{ profile.state }}{% endif %}
-        {% elif profile.suburb %}
-          {{ profile.suburb }}
-        {% elif profile.state %}
-          {% if profile.state == "NSW" or profile.state == "New South Wales" %}New South Wales
-          {% elif profile.state == "VIC" or profile.state == "Victoria" %}Victoria
-          {% elif profile.state == "QLD" or profile.state == "Queensland" %}Queensland
-          {% elif profile.state == "WA" or profile.state == "Western Australia" %}Western Australia
-          {% elif profile.state == "SA" or profile.state == "South Australia" %}South Australia
-          {% elif profile.state == "TAS" or profile.state == "Tasmania" %}Tasmania
-          {% elif profile.state == "NT" or profile.state == "Northern Territory" %}Northern Territory
-          {% elif profile.state == "ACT" or profile.state == "Australian Capital Territory" %}Australian Capital Territory
-          {% else %}{{ profile.state }}{% endif %}
-        {% else %}
-          No location provided
-        {% endif %}
-      </div>
-    </div>
-  </div>
+    <!-- ===================== PERSONAL SECTION ===================== -->
+    <div class="border-b border-gray-200 py-4">
+        <div class="lg:grid lg:grid-cols-4 lg:gap-4">
+            <div class="col-span-1 mb-4 lg:mb-0 invisible lg:visible">
+                <h3 class="text-lg font-semibold">Personel</h3>
+            </div>
+            <div class="col-span-3">
+                <div class="flex justify-between items-center mb-3 lg:hidden">
+                    <h3 class="text-lg font-semibold">Personal</h3>
+                    <button id="personal-edit-btn" onclick="toggleSection('personal')"
+                        class="text-blue-600 font-medium hover:underline"> <svg xmlns="http://www.w3.org/2000/svg"
+                            width="24" height="24" fill="#1f1f1f" viewBox="0 -960 960 960">
+                            <path
+                                d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z" />
+                        </svg></button>
+                </div>
+                <div class="hidden lg:flex lg:justify-end lg:mb-3">
+                    <button id="personal-edit-btn-lg" onclick="toggleSection('personal')"
+                        class="text-blue-600 font-medium hover:underline"> <svg xmlns="http://www.w3.org/2000/svg"
+                            width="24" height="24" fill="#1f1f1f" viewBox="0 -960 960 960">
+                            <path
+                                d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z" />
+                        </svg></button>
+                </div>
 
-  <!-- Inline Personal Form -->
-  <form id="personal-form" action="{% url 'profile_update_personal' %}" method="POST"
-        style="display:none" class="border-b py-4"
-        x-data="{
+                <!-- Personal Info Display -->
+                <div id="personal-display">
+                    <div class="text-gray-700">
+                        {% if profile.first_name %}{{ profile.first_name }}{% else %}Not provided{% endif %}
+                        {% if profile.middle_name %} {{ profile.middle_name }}{% endif %}
+                        {% if profile.last_name %} {{ profile.last_name }}{% else %}Not provided{% endif %}
+                    </div>
+                    <div class="text-gray-700 mt-1">
+                        {% if profile.suburb and profile.state %}
+                        {{ profile.suburb }},
+                        {% if profile.state == "NSW" or profile.state == "New South Wales" %}New South Wales
+                        {% elif profile.state == "VIC" or profile.state == "Victoria" %}Victoria
+                        {% elif profile.state == "QLD" or profile.state == "Queensland" %}Queensland
+                        {% elif profile.state == "WA" or profile.state == "Western Australia" %}Western Australia
+                        {% elif profile.state == "SA" or profile.state == "South Australia" %}South Australia
+                        {% elif profile.state == "TAS" or profile.state == "Tasmania" %}Tasmania
+                        {% elif profile.state == "NT" or profile.state == "Northern Territory" %}Northern Territory
+                        {% elif profile.state == "ACT" or profile.state == "Australian Capital Territory" %}Australian
+                        Capital Territory
+                        {% else %}{{ profile.state }}{% endif %}
+                        {% elif profile.suburb %}
+                        {{ profile.suburb }}
+                        {% elif profile.state %}
+                        {% if profile.state == "NSW" or profile.state == "New South Wales" %}New South Wales
+                        {% elif profile.state == "VIC" or profile.state == "Victoria" %}Victoria
+                        {% elif profile.state == "QLD" or profile.state == "Queensland" %}Queensland
+                        {% elif profile.state == "WA" or profile.state == "Western Australia" %}Western Australia
+                        {% elif profile.state == "SA" or profile.state == "South Australia" %}South Australia
+                        {% elif profile.state == "TAS" or profile.state == "Tasmania" %}Tasmania
+                        {% elif profile.state == "NT" or profile.state == "Northern Territory" %}Northern Territory
+                        {% elif profile.state == "ACT" or profile.state == "Australian Capital Territory" %}Australian
+                        Capital Territory
+                        {% else %}{{ profile.state }}{% endif %}
+                        {% else %}
+                        No location provided
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inline Personal Form -->
+    <form id="personal-form" action="{% url 'profile_update_personal' %}" method="POST" style="display:none"
+        class="border-b border-gray-200 py-6 mb-6" x-data="{
           openName:false,
           newFirst:'',
           newMiddle:'',
@@ -164,263 +248,420 @@
           currentMiddle:'{{ profile.middle_name|default_if_none:''|escapejs }}',
           currentLast:'{{ profile.last_name|default_if_none:''|escapejs }}'
         }">
-    {% csrf_token %}
-    <div class="mb-3 font-semibold text-lg">Edit Personal Information</div>
+        {% csrf_token %}
+        <div class="mb-3 font-semibold text-lg">Edit Personal Information</div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-      <div>
-        <label class="block text-sm font-medium text-gray-700">First name<span class="text-red-600">*</span></label>
-        <input readonly type="text" id="id_first_name_personal"
-               value="{{ profile.first_name|default_if_none:'' }}"
-               class="w-full border border-gray-300 px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed" required>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Middle name</label>
-        <input readonly type="text" id="id_middle_name_personal"
-               value="{{ profile.middle_name|default_if_none:'' }}"
-               class="w-full border border-gray-300 px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed">
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Last name<span class="text-red-600">*</span></label>
-        <input readonly type="text" id="id_last_name_personal"
-               value="{{ profile.last_name|default_if_none:'' }}"
-               class="w-full border border-gray-300 px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed" required>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Suburb</label>
-        <input type="text" name="suburb" id="id_suburb" placeholder="Enter suburb"
-               value="{{ profile.suburb|default_if_none:'' }}"
-               class="w-full border border-gray-300 px-3 py-2 bg-gray-200">
-      </div>
-      <div>
-        <label for="id_state" class="block text-sm font-medium text-gray-700">State</label>
-        <select name="state" id="id_state"
-                class="w-full border border-gray-300 px-3 py-2 bg-gray-200">
-          <option value="">Select state</option>
-          <option value="New South Wales" {% if profile.state == 'NSW' or profile.state == 'New South Wales' %}selected{% endif %}>New South Wales</option>
-          <option value="Victoria"        {% if profile.state == 'VIC' or profile.state == 'Victoria'        %}selected{% endif %}>Victoria</option>
-          <option value="Queensland"      {% if profile.state == 'QLD' or profile.state == 'Queensland'      %}selected{% endif %}>Queensland</option>
-          <option value="Western Australia" {% if profile.state == 'WA'  or profile.state == 'Western Australia' %}selected{% endif %}>Western Australia</option>
-          <option value="South Australia" {% if profile.state == 'SA'  or profile.state == 'South Australia'  %}selected{% endif %}>South Australia</option>
-          <option value="Tasmania"        {% if profile.state == 'TAS' or profile.state == 'Tasmania'        %}selected{% endif %}>Tasmania</option>
-          <option value="Northern Territory" {% if profile.state == 'NT'  or profile.state == 'Northern Territory' %}selected{% endif %}>Northern Territory</option>
-          <option value="Australian Capital Territory" {% if profile.state == 'ACT' or profile.state == 'Australian Capital Territory' %}selected{% endif %}>Australian Capital Territory</option>
-        </select>
-      </div>
-    </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">First name<span
+                        class="required-star">*</span></label>
+                <input readonly type="text" id="id_first_name_personal"
+                    value="{{ profile.first_name|default_if_none:'' }}"
+                    class="w-full border border-gray-300 px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed"
+                    required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Middle name</label>
+                <input readonly type="text" id="id_middle_name_personal"
+                    value="{{ profile.middle_name|default_if_none:'' }}"
+                    class="w-full border border-gray-300 px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Last name<span
+                        class="required-star">*</span></label>
+                <input readonly type="text" id="id_last_name_personal"
+                    value="{{ profile.last_name|default_if_none:'' }}"
+                    class="w-full border border-gray-300 px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed"
+                    required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Suburb</label>
+                <input type="text" name="suburb" id="id_suburb" placeholder="Enter suburb"
+                    value="{{ profile.suburb|default_if_none:'' }}"
+                    class="w-full border border-gray-300 px-3 py-2 bg-gray-200">
+            </div>
+            <div>
+                <label for="id_state" class="block text-sm font-medium text-gray-700">State</label>
+                <select name="state" id="id_state" class="w-full border border-gray-300 px-3 py-2 bg-gray-200">
+                    <option value="">Select state</option>
+                    <option value="New South Wales"
+                        {% if profile.state == 'NSW' or profile.state == 'New South Wales' %}selected{% endif %}>New
+                        South Wales
+                    </option>
+                    <option value="Victoria"
+                        {% if profile.state == 'VIC' or profile.state == 'Victoria'        %}selected{% endif %}>
+                        Victoria</option>
+                    <option value="Queensland"
+                        {% if profile.state == 'QLD' or profile.state == 'Queensland'      %}selected{% endif %}>
+                        Queensland</option>
+                    <option value="Western Australia"
+                        {% if profile.state == 'WA'  or profile.state == 'Western Australia' %}selected{% endif %}>
+                        Western Australia
+                    </option>
+                    <option value="South Australia"
+                        {% if profile.state == 'SA'  or profile.state == 'South Australia'  %}selected{% endif %}>South
+                        Australia
+                    </option>
+                    <option value="Tasmania"
+                        {% if profile.state == 'TAS' or profile.state == 'Tasmania'        %}selected{% endif %}>
+                        Tasmania</option>
+                    <option value="Northern Territory"
+                        {% if profile.state == 'NT'  or profile.state == 'Northern Territory' %}selected{% endif %}>
+                        Northern
+                        Territory</option>
+                    <option value="Australian Capital Territory"
+                        {% if profile.state == 'ACT' or profile.state == 'Australian Capital Territory' %}selected{% endif %}>
+                        Australian Capital Territory</option>
+                </select>
+            </div>
+        </div>
 
-    <!-- Name-change request -->
-    <button type="button"
-            x-show="!openName"
-            x-cloak
-            class="bg-blue-500 text-white px-4 py-2 mb-4"
+        <!-- Name-change request -->
+        <button type="button" x-show="!openName" x-cloak class="bg-blue-500 text-white px-4 py-2 mb-4"
             @click="openName = true">
-      Request Name Change
-    </button>
+            Request Name Change
+        </button>
 
-    <div x-show="openName" x-cloak class="border border-gray-300 p-4 mb-4 bg-gray-50">
-      <div class="mb-2 font-semibold text-sm">
-        Name-change request
-        <span x-data x-tooltip="Provide new name and reason"
-              class="ml-2 text-blue-500 cursor-pointer">(i)</span>
-      </div>
+        <div x-show="openName" x-cloak class="border border-gray-300 p-4 mb-4 bg-gray-50 rounded">
+            <div class="mb-2 font-semibold text-sm">
+                Name-change request
+                <span x-data x-tooltip="Provide new name and reason"
+                    class="ml-2 text-blue-500 cursor-pointer">(i)</span>
+            </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700">New first name<span class="text-red-600">*</span></label>
-          <input x-model="newFirst" type="text"
-                 class="w-full border border-gray-300 px-3 py-2 bg-white">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700">New middle name</label>
-          <input x-model="newMiddle" type="text"
-                 class="w-full border border-gray-300 px-3 py-2 bg-white">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700">New last name<span class="text-red-600">*</span></label>
-          <input x-model="newLast" type="text"
-                 class="w-full border border-gray-300 px-3 py-2 bg-white">
-        </div>
-      </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">New first name<span
+                            class="required-star">*</span></label>
+                    <input x-model="newFirst" type="text" class="w-full border border-gray-300 px-3 py-2 bg-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">New middle name</label>
+                    <input x-model="newMiddle" type="text" class="w-full border border-gray-300 px-3 py-2 bg-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">New last name<span
+                            class="required-star">*</span></label>
+                    <input x-model="newLast" type="text" class="w-full border border-gray-300 px-3 py-2 bg-white">
+                </div>
+            </div>
 
-      <label class="block text-sm font-medium text-gray-700 mb-1">Reason for change</label>
-      <textarea x-model="reason" rows="3"
+            <label class="block text-sm font-medium text-gray-700 mb-1">Reason for change</label>
+            <textarea x-model="reason" rows="3"
                 class="w-full border border-gray-300 px-3 py-2 bg-white mb-4"></textarea>
 
-      <div class="flex space-x-2">
-        <button type="button"
-                class="bg-green-600 text-white px-4 py-2"
-                :disabled="sending"
-                @click="
+            <div class="flex space-x-2">
+                <button type="button" class="bg-green-600 text-white px-4 py-2" :disabled="sending" @click="
                   const f=newFirst.trim();
                   const l=newLast.trim();
                   if(!f || !l){
                     showToast('Both first and last names are required.');
                     return;
                   }
-                  /* block only if first, middle & last are all unchanged */
-                  if(f.toLowerCase()===currentFirst.toLowerCase() &&
-                     l.toLowerCase()===currentLast.toLowerCase() &&
-                     newMiddle.trim().toLowerCase()===currentMiddle.toLowerCase()){
+                  /* ========== Section toggling system ========== */
+  let currentOpenSection = null;
+
+  function toggleSection(section, cancel = false) {
+    if (cancel) {
+      const form = document.getElementById(section + '-form');
+      const display = document.getElementById(section + '-display');
+      const editButton = document.getElementById(section + '-edit-btn');
+      const lgEditButton = document.getElementById(section + '-edit-btn-lg');
+      
+      if (form) form.style.display = 'none';
+      if (display) display.style.display = 'block';
+      if (editButton) editButton.style.display = 'block';
+      if (lgEditButton) lgEditButton.style.display = 'block';
+      
+      currentOpenSection = null;
+      return;
+    }
+    
+    // Close previously open section if any
+    if (currentOpenSection && currentOpenSection !== section) {
+      const prevForm = document.getElementById(currentOpenSection + '-form');
+      const prevDisplay = document.getElementById(currentOpenSection + '-display');
+      const prevButton = document.getElementById(currentOpenSection + '-edit-btn');
+      const prevLgButton = document.getElementById(currentOpenSection + '-edit-btn-lg');
+      
+      if (prevForm) prevForm.style.display = 'none';
+      if (prevDisplay) prevDisplay.style.display = 'block';
+      if (prevButton) prevButton.style.display = 'block';
+      if (prevLgButton) prevLgButton.style.display = 'block';
+      
+      if (currentOpenSection === 'email') toggleEmailInput(true);
+    }
+    
+    // Open the requested section
+    const display = document.getElementById(section + '-display');
+    const form = document.getElementById(section + '-form');
+    const editButton = document.getElementById(section + '-edit-btn');
+    const lgEditButton = document.getElementById(section + '-edit-btn-lg');
+    
+    if (!display || !form) return;
+    
+    display.style.display = 'none';
+    form.style.display = 'block';
+    
+    if (editButton) editButton.style.display = 'none';
+    if (lgEditButton) lgEditButton.style.display = 'none';
+    
+    currentOpenSection = section;
+  }
+  
+  /* ========== Email management ========== */
+  let emailCloseTimer = null;
+  
+  function toggleEmailInput(forceClose = false) {
+    if (emailCloseTimer) { 
+      clearTimeout(emailCloseTimer); 
+      emailCloseTimer = null;
+    }
+    
+    const emailForm = document.getElementById('email-form-container');
+    const emailDisplay = document.getElementById('email-display-section');
+    const emailButton = document.getElementById('toggle-email-btn');
+    const emailButtonLg = document.getElementById('toggle-email-btn-lg');
+    
+    if (forceClose || emailForm.style.display === 'block') {
+      emailForm.style.display = 'none';
+      emailDisplay.style.display = 'block';
+      
+      if (emailButton) emailButton.style.display = 'block';
+      if (emailButtonLg) emailButtonLg.style.display = 'block';
+      
+      document.getElementById('email-form-message').innerHTML = '';
+      document.getElementById('id_new_email').value = '';
+      
+      if (currentOpenSection === 'email') currentOpenSection = null;
+      return;
+    }
+    
+    if (currentOpenSection && currentOpenSection !== 'email') {
+      toggleSection(currentOpenSection, true);
+    }
+    
+    emailForm.style.display = 'block';
+    emailDisplay.style.display = 'none';
+    
+    if (emailButton) emailButton.style.display = 'none';
+    if (emailButtonLg) emailButtonLg.style.display = 'none';
+    
+    currentOpenSection = 'email';
+  }
+  
+  document.getElementById('email-change-submit').addEventListener('click', function() {
+    const email = document.getElementById('id_new_email').value;
+    const msgContainer = document.getElementById('email-form-message');
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    fetch(" {% url 'profile-emailchange' %}", { method: 'POST' , headers: { 'X-Requested-With' : 'XMLHttpRequest'
+                    , 'X-CSRFToken' : csrfToken }, body: new URLSearchParams({ email }) }) .then(response=>
+                    response.json())
+                    .then(data => {
+                    if (data.success) {
+                    msgContainer.innerHTML = `<div class="text-green-600">${data.message}</div>`;
+                    document.getElementById('current-email').textContent = data.email;
+
+                    const verificationStatus = document.getElementById('verification-status');
+                    verificationStatus.textContent = 'Not verified';
+                    verificationStatus.className = 'text-amber-500 mt-1';
+                    document.getElementById('verification-action').classList.remove('hidden');
+
+                    emailCloseTimer = setTimeout(() => {
+                    toggleEmailInput(true);
+                    emailCloseTimer = null;
+                    }, 4000);
+                    } else {
+                    msgContainer.innerHTML = `<div class="text-red-600">${data.message}</div>`;
+                    }
+                    })
+                    .catch(() => {
+                    msgContainer.innerHTML = '<div class="text-red-600">An error occurred. Please try again.</div>';
+                    });
+                    });
+
+                    function sendVerificationEmail() {
+                    fetch("{% url 'profile-emailverify' %}", {
+                    method: 'POST',
+                    headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                    showToast(data.message);
+                    })
+                    .catch(() => {
+                    showToast('Failed to send verification email. Please try again.');
+                    });
+                    }
+
+                    /* Initialize form field placeholders */
+                    document.addEventListener('DOMContentLoaded', () => {
+                    ['first_name', 'middle_name', 'last_name'].forEach(id => {
+                    const element = document.getElementById('id_' + id + '_personal');
+                    if (element && !element.readOnly) {
+                    element.placeholder = 'Enter ' + id.replace('_', ' ');
+                    }
+                    });
+                    }); block only if first, middle & last are all unchanged */
+                    if(f.toLowerCase()===currentFirst.toLowerCase() &&
+                    l.toLowerCase()===currentLast.toLowerCase() &&
+                    newMiddle.trim().toLowerCase()===currentMiddle.toLowerCase()){
                     showToast('New name must differ from current name.');
                     return;
-                  }
-                  if(!reason.trim()){
+                    }
+                    if(!reason.trim()){
                     showToast('Please provide a reason for the name change.');
                     return;
-                  }
-                  sending=true;
-                  const csrf=document.querySelector('[name=csrfmiddlewaretoken]').value;
-                  fetch('{% url 'profile_request_name_change' %}',{
+                    }
+                    sending=true;
+                    const csrf=document.querySelector('[name=csrfmiddlewaretoken]').value;
+                    fetch('{% url 'profile_request_name_change' %}',{
                     method:'POST',
                     headers:{'X-CSRFToken':csrf,'X-Requested-With':'XMLHttpRequest'},
                     body:new URLSearchParams({
-                      new_first:f,
-                      new_middle:newMiddle.trim(),
-                      new_last:l,
-                      reason:reason.trim()
+                    new_first:f,
+                    new_middle:newMiddle.trim(),
+                    new_last:l,
+                    reason:reason.trim()
                     })
-                  }).then(r=>r.json()).then(d=>{
-                      showToast(d.message);
-                      if(d.success){ openName=false; newFirst=''; newMiddle=''; newLast=''; reason=''; }
-                  }).catch(()=>{ showToast('Error sending request.'); })
+                    }).then(r=>r.json()).then(d=>{
+                    showToast(d.message);
+                    if(d.success){ openName=false; newFirst=''; newMiddle=''; newLast=''; reason=''; }
+                    }).catch(()=>{ showToast('Error sending request.'); })
                     .finally(()=>sending=false);
-                ">
-          Send Request
-        </button>
-        <button type="button"
-                class="bg-gray-500 text-white px-4 py-2"
-                @click="openName = false">
-          Cancel
-        </button>
-      </div>
+                    ">
+                    Send Request
+                </button>
+                <button type="button" class="bg-gray-500 text-white px-4 py-2" @click="openName = false">
+                    Cancel
+                </button>
+            </div>
+        </div>
+
+        <div class="flex space-x-2">
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2">Save</button>
+            <button type="button" onclick="toggleSection('personal',true)"
+                class="bg-gray-500 text-white px-4 py-2">Cancel</button>
+        </div>
+    </form>
+
+    <!-- ===================== SECURITY CLEARANCE SECTION ===================== -->
+    <div class="border-b border-gray-200 py-4">
+        <div class="lg:grid lg:grid-cols-4 lg:gap-4">
+            <div class="col-span-1 mb-4 lg:mb-0 invisible lg:visible">
+                <h3 class="text-lg font-semibold">Security Clearance</h3>
+            </div>
+            <div class="col-span-3">
+                <div class="flex justify-between items-center mb-3 lg:hidden">
+                    <h3 class="text-lg font-semibold">Security Clearance</h3>
+                </div>
+                <!-- Security Display -->
+                <div id="security-display">
+                    <div class="text-gray-700 flex items-center space-x-2">
+                        <span class="text-truncate"
+                            title="{% if profile.clearance_no %}{{ profile.clearance_no }}{% else %}No CSID{% endif %}">
+                            {% if profile.clearance_no %}{{ profile.clearance_no }}{% else %}No CSID{% endif %}
+                        </span>
+                        {% if profile.clearance_valid == "YES" %}
+                        <span class="text-green-500 font-semibold">Valid</span>
+                        {% elif profile.clearance_valid == "PENDING" %}
+                        <span class="text-amber-500 font-semibold">Pending</span>
+                        {% else %}
+                        <span class="text-red-500 font-semibold">Invalid</span>
+                        {% endif %}
+                    </div>
+                    <div class="text-gray-700 mt-1">
+                        {% if profile.clearance_active %}
+                        <span class="text-green-500 font-semibold">Active</span>
+                        {% else %}
+                        <span class="text-red-500 font-semibold">Inactive</span>
+                        {% endif %}
+                    </div>
+                    <div class="text-gray-700 mt-1">
+                        {% if profile.clearance_level %}{{ profile.clearance_level }}{% else %}No level{% endif %}
+                    </div>
+                    <div class="text-gray-700 mt-1">
+                        {% if profile.clearance_revalidation %}
+                        Re-validation date: {{ profile.clearance_revalidation|date:"d/m/Y" }}
+                        {% else %}
+                        No re-validation date
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="flex space-x-2">
-      <button type="submit" class="bg-blue-500 text-white px-4 py-2">Save</button>
-      <button type="button"
-              onclick="toggleSection('personal',true)"
-              class="bg-gray-500 text-white px-4 py-2">Cancel</button>
-    </div>
-  </form>
+    <!-- ===================== SKILLS SECTION ===================== -->
+    <div class="border-b border-gray-200 py-4">
+        <div class="lg:grid lg:grid-cols-4 lg:gap-4">
+            <div class="col-span-1 mb-4 lg:mb-0 invisible lg:visible">
+                <h3 class="text-lg font-semibold">Skills</h3>
+            </div>
+            <div class="col-span-3">
+                <div class="flex justify-between items-center mb-3 lg:hidden">
+                    <h3 class="text-lg font-semibold">Skills</h3>
+                    <button id="skills-edit-btn" onclick="toggleSection('skills')"
+                        class="text-blue-600 font-medium hover:underline">
 
-  <!-- ===================== SECURITY CLEARANCE ===================== -->
-  <div class="border-b py-4 w-full">
-    <div class="flex justify-between items-center mb-3">
-      <h3 class="font-semibold text-lg">Security Clearance</h3>
-    </div>
 
-    <div id="security-display">
-      <div class="text-gray-700 flex items-center space-x-2">
-        <span class="text-truncate"
-              title="{% if profile.clearance_no %}{{ profile.clearance_no }}{% else %}No CSID{% endif %}">
-          {% if profile.clearance_no %}{{ profile.clearance_no }}{% else %}No CSID{% endif %}
-        </span>
-        {% if profile.clearance_valid == "YES" %}
-          <span class="text-green-500 font-semibold">Valid</span>
-        {% elif profile.clearance_valid == "PENDING" %}
-        {% else %}
-          <span class="text-red-500 font-semibold">Invalid</span>
-        {% endif %}
-      </div>
-      <div class="text-gray-700 mt-1">
-        {% if profile.clearance_active %}
-          <span class="text-green-500 font-semibold">Active</span>
-        {% else %}
-          <span class="text-red-500 font-semibold">Inactive</span>
-        {% endif %}
-      </div>
-      <div class="text-gray-700 mt-1">
-        {% if profile.clearance_level %}{{ profile.clearance_level }}{% else %}No level{% endif %}
-      </div>
-      <div class="text-gray-700 mt-1">
-        {% if profile.clearance_revalidation %}
-          Re-validation date: {{ profile.clearance_revalidation|date:"d/m/Y" }}
-        {% else %}
-          No re-validation date
-        {% endif %}
-      </div>
-    </div>
-  </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#1f1f1f"
+                            viewBox="0 -960 960 960">
+                            <path
+                                d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z" />
+                        </svg></button>
+                </div>
+                <div class="hidden lg:flex lg:justify-end lg:mb-3">
+                    <button id="skills-edit-btn-lg" onclick="toggleSection('skills')"
+                        class="text-blue-600 font-medium hover:underline">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#1f1f1f"
+                            viewBox="0 -960 960 960">
+                            <path
+                                d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z" />
+                        </svg></button>
+                </div>
 
-  <!-- Inline Security Form -->
-  <form id="security-form" action="{% url 'profile_update_security' %}" method="POST"
-        style="display:none" class="border-b py-4">
-    {% csrf_token %}
-    <div class="mb-3 font-semibold text-lg">Edit Clearance</div>
-
-    <div class="mb-4">
-      <label class="block text-sm font-medium text-gray-700">CSID Number</label>
-      <input readonly type="text"
-             value="{% if profile.clearance_no %}{{ profile.clearance_no }}{% else %}Not provided{% endif %}"
-             class="w-full border border-gray-300 px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed">
+                <!-- Skills Display -->
+                <div id="skills-display">
+                    <div class="text-gray-700">
+                        {% if profile.skill_sets %}
+                        {% with skill_list=profile.skill_sets|split:"," %}
+                        <span class="hidden md:inline"
+                            title="{{ profile.skill_sets }}">{{ skill_list|join:", " }}</span>
+                        <span class="truncate md:hidden" title="{{ profile.skill_sets }}">
+                            {% if skill_list|length > 1 %}
+                            {{ skill_list.0 }} and {{ skill_list|length|add:"-1" }} more
+                            {% else %}
+                            {{ skill_list.0 }}
+                            {% endif %}
+                        </span>
+                        {% endwith %}
+                        {% else %}
+                        No skills selected
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="mb-4">
-      <label for="id_clearance_level" class="block text-sm font-medium text-gray-700">
-        AGSVA Level
-      </label>
-      <select name="clearance_level" id="id_clearance_level" disabled
-              class="w-full border border-gray-300 px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed">
-        <option value="" {% if not profile.clearance_level %}selected{% endif %}>Select clearance level</option>
-        <option value="None"     {% if profile.clearance_level == "None"     %}selected{% endif %}>None</option>
-        <option value="Pending"  {% if profile.clearance_level == "Pending"  %}selected{% endif %}>Pending</option>
-        <option value="Baseline" {% if profile.clearance_level == "Baseline" %}selected{% endif %}>Baseline</option>
-        <option value="NV1"      {% if profile.clearance_level == "NV1"      %}selected{% endif %}>NV1</option>
-        <option value="NV2"      {% if profile.clearance_level == "NV2"      %}selected{% endif %}>NV2</option>
-        <option value="PV"       {% if profile.clearance_level == "PV"       %}selected{% endif %}>PV</option>
-      </select>
-    </div>
+    <!-- Inline Skills Form -->
+    <form id="skills-form" action="{% url 'profile_update_skills' %}" method="POST" style="display:none"
+        class="border-b border-gray-200 py-6 mb-6">
+        {% csrf_token %}
+        <div class="mb-3 font-semibold text-lg">Edit Skills</div>
 
-    <div class="flex space-x-2">
-      <button type="submit" class="bg-blue-500 text-white px-4 py-2">Save</button>
-      <button type="button"
-              onclick="toggleSection('security',true)"
-              class="bg-gray-500 text-white px-4 py-2">Cancel</button>
-    </div>
-  </form>
+        <div class="flex items-center mb-2">
+            <span class="text-sm font-medium text-gray-700">Skills</span>
+            <span x-data x-tooltip="Select all relevant specialisations"
+                class="ml-2 text-blue-500 cursor-pointer text-sm font-bold">(i)</span>
+        </div>
 
-  <!-- ===================== SKILLS ===================== -->
-  <div class="border-b py-4 w-full">
-    <div class="flex justify-between items-center mb-3">
-      <h3 class="font-semibold text-lg">Skills</h3>
-      <button id="skills-edit-btn"
-              onclick="toggleSection('skills')"
-              class="text-blue-600 font-medium hover:underline">EDIT</button>
-    </div>
-    <div id="skills-display">
-      <div class="text-gray-700">
-        {% if profile.skill_sets %}
-          {% with skill_list=profile.skill_sets|split:"," %}
-            <span class="hidden md:inline" title="{{ profile.skill_sets }}">{{ skill_list|join:", " }}</span>
-            <span class="truncate md:hidden" title="{{ profile.skill_sets }}">
-              {% if skill_list|length > 1 %}
-                {{ skill_list.0 }} and {{ skill_list|length|add:"-1" }} more
-              {% else %}
-                {{ skill_list.0 }}
-              {% endif %}
-            </span>
-          {% endwith %}
-        {% else %}
-          No skills selected
-        {% endif %}
-      </div>
-    </div>
-  </div>
-
-  <!-- Inline Skills Form -->
-  <form id="skills-form" action="{% url 'profile_update_skills' %}" method="POST"
-        style="display:none" class="py-4 w-full">
-    {% csrf_token %}
-    <div class="mb-3 font-semibold text-lg">Edit Skills</div>
-
-    <div class="flex items-center mb-2">
-      <span class="text-sm font-medium text-gray-700">Skills</span>
-      <span x-data x-tooltip="Select all relevant specialisations"
-            class="ml-2 text-blue-500 cursor-pointer text-sm font-bold">(i)</span>
-    </div>
-
-    <div x-data="{
+        <div x-data="{
             open:false,
             values:[],
             industries:[
@@ -452,163 +693,189 @@
             }
           }" x-init="init()" class="relative w-full">
 
-      <button type="button" @click="open=!open"
-              class="w-full flex items-center justify-between gap-2 border border-gray-300 bg-gray-200 px-3 py-2">
-        <span x-text="label" class="text-black"></span>
-        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg"
-             viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd"
-                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 0 010-1.414z"
-                clip-rule="evenodd"/>
-        </svg>
-      </button>
-
-      <div x-show="open" x-cloak @click.away="open=false"
-           class="absolute z-10 mt-1 w-full bg-white shadow-lg border border-gray-300 max-h-60 overflow-y-auto">
-        <ul class="py-1">
-          <template x-for="i in industries" :key="i.id">
-            <li @click="toggle(i);$event.stopPropagation()"
-                :class="{'bg-blue-50':isSel(i)}"
-                class="px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center">
-              <div class="mr-2 h-5 w-5 flex items-center justify-center border"
-                   :class="isSel(i)?'bg-blue-500 border-blue-500':'border-gray-300'">
-                <svg x-show="isSel(i)" class="h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg"
-                     viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 0 011.414-1.414L8 12.586l7.293-7.293a1 0 011.414 0z"
-                        clip-rule="evenodd"/>
+            <button type="button" @click="open=!open"
+                class="w-full flex items-center justify-between gap-2 border border-gray-300 bg-gray-200 px-3 py-2">
+                <span x-text="label" class="text-black"></span>
+                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                    fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 0 010-1.414z"
+                        clip-rule="evenodd" />
                 </svg>
-              </div>
-              <span x-text="i.name"></span>
-            </li>
-          </template>
-        </ul>
-      </div>
+            </button>
 
-      <template x-for="v in values" :key="v.id">
-        <input type="hidden" name="skill_sets_multiple" :value="v.name">
-      </template>
+            <div x-show="open" x-cloak @click.away="open=false"
+                class="absolute z-10 mt-1 w-full bg-white shadow-lg border border-gray-300 max-h-60 overflow-y-auto rounded">
+                <ul class="py-1">
+                    <template x-for="i in industries" :key="i.id">
+                        <li @click="toggle(i);$event.stopPropagation()" :class="{'bg-blue-50':isSel(i)}"
+                            class="px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center">
+                            <div class="mr-2 h-5 w-5 flex items-center justify-center border"
+                                :class="isSel(i)?'bg-blue-500 border-blue-500':'border-gray-300'">
+                                <svg x-show="isSel(i)" class="h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd"
+                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 0 011.414-1.414L8 12.586l7.293-7.293a1 0 011.414 0z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <span x-text="i.name"></span>
+                        </li>
+                    </template>
+                </ul>
+            </div>
+
+            <template x-for="v in values" :key="v.id">
+                <input type="hidden" name="skill_sets_multiple" :value="v.name">
+            </template>
+        </div>
+
+        <div class="flex space-x-2 mt-4">
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2">Save</button>
+            <button type="button" onclick="toggleSection('skills',true)"
+                class="bg-gray-500 text-white px-4 py-2">Cancel</button>
+        </div>
+    </form>
+
+    <!-- DELETE ACCOUNT -->
+    <div class="mt-8 flex">
+        <a href="{% url 'profile-delete' %}" class="bg-white border border-red-500 text-red-500 py-2 px-4">
+            Delete Account
+        </a>
     </div>
 
-    <div class="flex space-x-2 mt-4">
-      <button type="submit" class="bg-blue-500 text-white px-4 py-2">Save</button>
-      <button type="button"
-              onclick="toggleSection('skills',true)"
-              class="bg-gray-500 text-white px-4 py-2">Cancel</button>
-    </div>
-  </form>
-
-  <!-- DELETE ACCOUNT -->
-  <div class="mt-6 text-left">
-    <a href="{% url 'profile-delete' %}"
-       class="bg-white border border-red-500 text-red-500 py-2 px-4 inline-block">
-      Delete Account
-    </a>
-  </div>
+    <!-- Toast notification container for Alpine.js notifications -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50"></div>
 </div>
 
+<script>
+    /* ========== Toast notification helper ========== */
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'toast-enter fixed top-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded shadow-lg z-50 flex items-center';
+
+        const messageSpan = document.createElement('span');
+        messageSpan.textContent = message;
+
+        const closeButton = document.createElement('button');
+        closeButton.innerHTML = '&times;';
+        closeButton.className = 'ml-4 font-bold';
+        closeButton.onclick = () => toast.remove();
+
+        toast.appendChild(messageSpan);
+        toast.appendChild(closeButton);
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.replace('toast-enter', 'toast-leave');
+        }, 4000);
+
+        setTimeout(() => toast.remove(), 4500);
+    }
+
+</script>
 <!-- ========== JS helpers ========== -->
 <script>
-  function showToast(msg){
-    const t=document.createElement('div');
-    t.className='toast-enter fixed top-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-4 py-2 shadow-lg z-50 flex items-center';
-    const span=document.createElement('span');
-    span.textContent=msg;
-    const btn=document.createElement('button');
-    btn.innerHTML='&times;';
-    btn.className='ml-4 font-bold';
-    btn.onclick=()=>{t.remove()};
-    t.appendChild(span); t.appendChild(btn);
-    document.body.appendChild(t);
-    setTimeout(()=>{t.classList.replace('toast-enter','toast-leave');},4000);
-    setTimeout(()=>t.remove(),4500);
-  }
-
-  let currentOpenSection=null;
-
-  function toggleSection(section,cancel=false){
-    if(cancel){
-      const f=document.getElementById(section+'-form');
-      const d=document.getElementById(section+'-display');
-      const b=document.getElementById(section+'-edit-btn');
-      if(f)f.style.display='none';
-      if(d)d.style.display='block';
-      if(b)b.style.display='block';
-      currentOpenSection=null;
-      return;
+    function showToast(msg) {
+        const t = document.createElement('div');
+        t.className = 'toast-enter fixed top-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-4 py-2 shadow-lg z-50 flex items-center';
+        const span = document.createElement('span');
+        span.textContent = msg;
+        const btn = document.createElement('button');
+        btn.innerHTML = '&times;';
+        btn.className = 'ml-4 font-bold';
+        btn.onclick = () => { t.remove() };
+        t.appendChild(span); t.appendChild(btn);
+        document.body.appendChild(t);
+        setTimeout(() => { t.classList.replace('toast-enter', 'toast-leave'); }, 4000);
+        setTimeout(() => t.remove(), 4500);
     }
-    if(currentOpenSection && currentOpenSection!==section){
-      const pf=document.getElementById(currentOpenSection+'-form');
-      const pd=document.getElementById(currentOpenSection+'-display');
-      const pb=document.getElementById(currentOpenSection+'-edit-btn');
-      if(pf)pf.style.display='none';
-      if(pd)pd.style.display='block';
-      if(pb)pb.style.display='block';
-      if(currentOpenSection==='email')toggleEmailInput(true);
+
+    let currentOpenSection = null;
+
+    function toggleSection(section, cancel = false) {
+        if (cancel) {
+            const f = document.getElementById(section + '-form');
+            const d = document.getElementById(section + '-display');
+            const b = document.getElementById(section + '-edit-btn');
+            if (f) f.style.display = 'none';
+            if (d) d.style.display = 'block';
+            if (b) b.style.display = 'block';
+            currentOpenSection = null;
+            return;
+        }
+        if (currentOpenSection && currentOpenSection !== section) {
+            const pf = document.getElementById(currentOpenSection + '-form');
+            const pd = document.getElementById(currentOpenSection + '-display');
+            const pb = document.getElementById(currentOpenSection + '-edit-btn');
+            if (pf) pf.style.display = 'none';
+            if (pd) pd.style.display = 'block';
+            if (pb) pb.style.display = 'block';
+            if (currentOpenSection === 'email') toggleEmailInput(true);
+        }
+        const d = document.getElementById(section + '-display');
+        const f = document.getElementById(section + '-form');
+        const b = document.getElementById(section + '-edit-btn');
+        if (!d || !f) return;
+        d.style.display = 'none';
+        f.style.display = 'block';
+        if (b) b.style.display = 'none';
+        currentOpenSection = section;
     }
-    const d=document.getElementById(section+'-display');
-    const f=document.getElementById(section+'-form');
-    const b=document.getElementById(section+'-edit-btn');
-    if(!d||!f)return;
-    d.style.display='none';
-    f.style.display='block';
-    if(b)b.style.display='none';
-    currentOpenSection=section;
-  }
 
-  function toggleEmailInput(forceClose=false){
-    if(window.emailCloseTimer){clearTimeout(window.emailCloseTimer);window.emailCloseTimer=null;}
-    const c=document.getElementById('email-form-container');
-    const d=document.getElementById('email-display-section');
-    const b=document.getElementById('toggle-email-btn');
-    if(forceClose || c.style.display==='block'){
-      c.style.display='none'; d.style.display='block'; if(b)b.style.display='block';
-      document.getElementById('email-form-message').innerHTML='';
-      document.getElementById('id_new_email').value='';
-      if(currentOpenSection==='email')currentOpenSection=null;
-      return;
+    function toggleEmailInput(forceClose = false) {
+        if (window.emailCloseTimer) { clearTimeout(window.emailCloseTimer); window.emailCloseTimer = null; }
+        const c = document.getElementById('email-form-container');
+        const d = document.getElementById('email-display-section');
+        const b = document.getElementById('toggle-email-btn');
+        if (forceClose || c.style.display === 'block') {
+            c.style.display = 'none'; d.style.display = 'block'; if (b) b.style.display = 'block';
+            document.getElementById('email-form-message').innerHTML = '';
+            document.getElementById('id_new_email').value = '';
+            if (currentOpenSection === 'email') currentOpenSection = null;
+            return;
+        }
+        if (currentOpenSection && currentOpenSection !== 'email') { toggleSection(currentOpenSection, true); }
+        c.style.display = 'block'; d.style.display = 'none'; if (b) b.style.display = 'none';
+        currentOpenSection = 'email';
     }
-    if(currentOpenSection && currentOpenSection!=='email'){toggleSection(currentOpenSection,true);}
-    c.style.display='block'; d.style.display='none'; if(b)b.style.display='none';
-    currentOpenSection='email';
-  }
 
-  document.getElementById('email-change-submit').addEventListener('click',()=>{
-    const email=document.getElementById('id_new_email').value;
-    const msg=document.getElementById('email-form-message');
-    const csrf=document.querySelector('[name=csrfmiddlewaretoken]').value;
-    fetch("{% url 'profile-emailchange' %}",{
-      method:'POST',
-      headers:{'X-Requested-With':'XMLHttpRequest','X-CSRFToken':csrf},
-      body:new URLSearchParams({email})
-    }).then(r=>r.json()).then(d=>{
-      if(d.success){
-        msg.innerHTML=`<div class="text-green-600">${d.message}</div>`;
-        document.getElementById('current-email').textContent=d.email;
-        const vs=document.getElementById('verification-status');
-        vs.textContent='Not verified'; vs.className='text-amber-500 mt-1';
-        document.getElementById('verification-action').classList.remove('hidden');
-        window.emailCloseTimer=setTimeout(()=>{toggleEmailInput(true); window.emailCloseTimer=null;},4000);
-      }else{
-        msg.innerHTML=`<div class="text-red-600">${d.message}</div>`;
-      }
-    }).catch(()=>{msg.innerHTML='<div class="text-red-600">An error occurred. Please try again.</div>';});
-  });
-
-  function sendVerificationEmail(){
-    fetch("{% url 'profile-emailverify' %}",{
-      method:'POST',
-      headers:{'X-Requested-With':'XMLHttpRequest','X-CSRFToken':'{{ csrf_token }}'}
-    }).then(r=>r.json()).then(d=>{
-      showToast(d.message);
-    }).catch(()=>{showToast('Failed to send verification email. Please try again.');});
-  }
-
-  document.addEventListener('DOMContentLoaded',()=>{
-    ['first_name','middle_name','last_name'].forEach(id=>{
-      const el=document.getElementById('id_'+id+'_personal');
-      if(el && !el.readOnly){ el.placeholder='Enter '+id.replace('_',' '); }
+    document.getElementById('email-change-submit').addEventListener('click', () => {
+        const email = document.getElementById('id_new_email').value;
+        const msg = document.getElementById('email-form-message');
+        const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        fetch("{% url 'profile-emailchange' %}", {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrf },
+            body: new URLSearchParams({ email })
+        }).then(r => r.json()).then(d => {
+            if (d.success) {
+                msg.innerHTML = `<div class="text-green-600">${d.message}</div>`;
+                document.getElementById('current-email').textContent = d.email;
+                const vs = document.getElementById('verification-status');
+                vs.textContent = 'Not verified'; vs.className = 'text-amber-500 mt-1';
+                document.getElementById('verification-action').classList.remove('hidden');
+                window.emailCloseTimer = setTimeout(() => { toggleEmailInput(true); window.emailCloseTimer = null; }, 4000);
+            } else {
+                msg.innerHTML = `<div class="text-red-600">${d.message}</div>`;
+            }
+        }).catch(() => { msg.innerHTML = '<div class="text-red-600">An error occurred. Please try again.</div>'; });
     });
-  });
+
+    function sendVerificationEmail() {
+        fetch("{% url 'profile-emailverify' %}", {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': '{{ csrf_token }}' }
+        }).then(r => r.json()).then(d => {
+            showToast(d.message);
+        }).catch(() => { showToast('Failed to send verification email. Please try again.'); });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        ['first_name', 'middle_name', 'last_name'].forEach(id => {
+            const el = document.getElementById('id_' + id + '_personal');
+            if (el && !el.readOnly) { el.placeholder = 'Enter ' + id.replace('_', ' '); }
+        });
+    });
 </script>
 {% endblock %}

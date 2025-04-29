@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block layout %}
+<main class="flex items-start justify-center w-full mt-12 p-6 pt-52">
+  <div class="bg-white shadow-lg p-12 max-w-md max-h-fit mx-auto">
+    {% block content %}{% endblock %}
+  </div>
+</main>
+{% endblock %}

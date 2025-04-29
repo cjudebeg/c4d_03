@@ -273,45 +273,48 @@ def update_personal_view(request):
 @require_POST
 def request_name_change_view(request):
     """
-    AJAX endpoint to capture a user’s name-change request, now including middle name.
+    AJAX endpoint to capture a user’s name-change request, now including middle name,
+    and to reset name_change_done so admins will always see a new request.
     """
-    # Only accept POSTs over XHR
-    if request.method == "POST" and request.headers.get("x-requested-with") == "XMLHttpRequest":
-        new_first  = request.POST.get("new_first",  "").strip()
-        new_middle = request.POST.get("new_middle", "").strip()
-        new_last   = request.POST.get("new_last",   "").strip()
-        reason     = request.POST.get("reason",     "").strip()
+    # Only accept XHR POSTs
+    if request.headers.get("x-requested-with") != "XMLHttpRequest":
+        return HttpResponseBadRequest("Invalid request")
 
-        # First & last are mandatory
-        if not new_first or not new_last:
-            return JsonResponse({
-                "success": False,
-                "message": "Both first and last names are required."
-            })
+    new_first  = request.POST.get("new_first",  "").strip()
+    new_middle = request.POST.get("new_middle", "").strip()
+    new_last   = request.POST.get("new_last",   "").strip()
+    reason     = request.POST.get("reason",     "").strip()
 
-        # Get the user’s profile
-        profile = request.user.profile
-
-        # Save all four pending fields
-        profile.pending_first_name     = new_first
-        profile.pending_middle_name    = new_middle   # ← newly‐added
-        profile.pending_last_name      = new_last
-        profile.pending_name_reason    = reason
-        profile.pending_name_requested = timezone.now()
-        profile.save(update_fields=[
-            "pending_first_name",
-            "pending_middle_name",
-            "pending_last_name",
-            "pending_name_reason",
-            "pending_name_requested",
-        ])
-
+    # Enforce mandatory first & last
+    if not new_first or not new_last:
         return JsonResponse({
-            "success": True,
-            "message": "Your name‐change request has been submitted."
+            "success": False,
+            "message": "Both first and last names are required."
         })
 
-    return HttpResponseBadRequest("Invalid request")
+    profile = request.user.profile
+
+    # Save all pending fields, clear the admin-done flag
+    profile.pending_first_name     = new_first
+    profile.pending_middle_name    = new_middle
+    profile.pending_last_name      = new_last
+    profile.pending_name_reason    = reason
+    profile.pending_name_requested = timezone.now()
+    profile.name_change_done       = False
+
+    profile.save(update_fields=[
+        "pending_first_name",
+        "pending_middle_name",
+        "pending_last_name",
+        "pending_name_reason",
+        "pending_name_requested",
+        "name_change_done",
+    ])
+
+    return JsonResponse({
+        "success": True,
+        "message": "Your name-change request has been submitted."
+    })
 
 
 @login_required

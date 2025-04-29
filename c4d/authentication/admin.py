@@ -2,16 +2,17 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import CustomUser, Profile
 from .forms  import CustomUserChangeForm
+from django.utils.translation import gettext_lazy as _
 
 
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
-    form          = CustomUserChangeForm
-    model         = CustomUser
-    list_display  = ("email", "is_staff", "is_active")
-    list_filter   = ("is_staff", "is_active")
+    form         = CustomUserChangeForm
+    model        = CustomUser
+    list_display = ("email", "is_staff", "is_active")
+    list_filter  = ("is_staff", "is_active")
     search_fields = ("email",)
-    ordering      = ("email",)          # username field removed
+    ordering     = ("email",)
 
     fieldsets = (
         (None,              {"fields": ("email", "password")}),
@@ -30,19 +31,21 @@ class CustomUserAdmin(UserAdmin):
 
 
 class PendingNameFilter(admin.SimpleListFilter):
-    title          = "Pending name change"
+    title          = _("Pending name change")
     parameter_name = "pending_name_requested"
 
     def lookups(self, request, model_admin):
         return [
-            ("yes", "Has request"),
-            ("no",  "No request"),
+            ("yes", _("Has pending request")),
+            ("no",  _("No request")),
         ]
 
     def queryset(self, request, qs):
         if self.value() == "yes":
-            return qs.exclude(pending_name_requested__isnull=True)
+            # only those with a pending request and not yet marked done
+            return qs.filter(pending_name_requested__isnull=False, name_change_done=False)
         if self.value() == "no":
+            # no request at all
             return qs.filter(pending_name_requested__isnull=True)
         return qs
 
@@ -64,11 +67,13 @@ class ProfileAdmin(admin.ModelAdmin):
         "pending_last_name",
         "pending_name_reason",
         "pending_name_requested",
+        "name_change_done",
     )
     list_editable = (
         "clearance_valid",
         "clearance_active",
         "clearance_level",
+        "name_change_done",
     )
     list_filter = (PendingNameFilter,)
 
@@ -82,21 +87,23 @@ class ProfileAdmin(admin.ModelAdmin):
     )
 
     fieldsets = (
-        (None,       {"fields": ("user",)}),
-        ("Personal", {"fields": ("first_name", "middle_name", "last_name", "state", "suburb")}),
+        (None,        {"fields": ("user",)}),
+        ("Personal",  {"fields": ("first_name", "middle_name", "last_name", "state", "suburb")}),
         ("Clearance", {"fields": (
             ("clearance_no", "clearance_level"),
             ("clearance_valid", "clearance_active"),
             "clearance_revalidation",
         )}),
-        ("Skills", {"fields": ("skill_sets", "skill_level")}),
+        ("Skills",    {"fields": ("skill_sets", "skill_level")}),
         ("Pending name-change request", {
+            # always visible so admin can act on it immediately
             "fields": (
                 "pending_first_name",
                 "pending_middle_name",
                 "pending_last_name",
                 "pending_name_reason",
                 "pending_name_requested",
+                "name_change_done",  # ← allow admin to flag processing complete
             )
         }),
     )

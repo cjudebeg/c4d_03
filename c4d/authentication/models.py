@@ -45,7 +45,7 @@ class CustomUser(AbstractUser):
 
     objects = CustomUserManager()
 
-    def __str__(self) -> str:   # pragma: no cover
+    def __str__(self) -> str:
         return self.email
 
 
@@ -89,27 +89,35 @@ class Profile(models.Model):
 
     # pending-name-change (no extra table)
     pending_first_name     = models.CharField(max_length=30, blank=True, null=True)
-    pending_middle_name    = models.CharField(max_length=30, blank=True, null=True)  # ← NEW
+    pending_middle_name    = models.CharField(max_length=30, blank=True, null=True)
     pending_last_name      = models.CharField(max_length=30, blank=True, null=True)
     pending_name_reason    = models.TextField(blank=True, null=True)
     pending_name_requested = models.DateTimeField(blank=True, null=True)
 
-    def __str__(self) -> str:   # pragma: no cover
+    # ← NEW FLAG FOR ADMIN
+    name_change_done       = models.BooleanField(
+        default=False,
+        help_text="Set to True by admin once a pending name-change request has been processed."
+    )
+
+    def __str__(self) -> str:
         return f"Profile of {self.user.email}"
 
     def clear_pending_name(self) -> None:
         """
         Helper so admins can clear a request quickly.
         """
-        self.pending_first_name  = None
-        self.pending_middle_name = None
-        self.pending_last_name   = None
-        self.pending_name_reason = None
+        self.pending_first_name     = None
+        self.pending_middle_name    = None
+        self.pending_last_name      = None
+        self.pending_name_reason    = None
         self.pending_name_requested = None
+        self.name_change_done       = False
         self.save(update_fields=[
             "pending_first_name",
             "pending_middle_name",
             "pending_last_name",
             "pending_name_reason",
             "pending_name_requested",
+            "name_change_done",
         ])
