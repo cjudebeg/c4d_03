@@ -1,32 +1,39 @@
-"""
-Saves name-change requests to the Profile.
-Clearance level is explicitly set to non-required in the ProfileUpdateForm
-instance so the field is optional in onboarding.
-"""
+# views.py
 
 from __future__ import annotations
 
-import random, string, time
+import random
+import string
+import time
+
 from django.shortcuts               import render, redirect, get_object_or_404
 from django.contrib.auth            import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views      import redirect_to_login
 from django.core.exceptions         import ObjectDoesNotExist
-from django.urls                    import reverse
+from django.urls                    import reverse, reverse_lazy
 from django.contrib                 import messages
 from django.conf                    import settings
 from django.core.mail               import send_mail
-from django.http                    import JsonResponse
+from django.http                    import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.http   import require_POST
 from django.utils                   import timezone
-from django.http                    import JsonResponse, HttpResponseBadRequest
 
 
 from allauth.account.utils  import send_email_confirmation
-from allauth.account.views  import SignupView
+from allauth.account.views  import SignupView, PasswordChangeView
 
 from .forms  import ProfileUpdateForm, EmailForm, CustomUserSignupForm
-from .models import Profile  # <–– remove NameChangeRequest
+from .models import Profile
+
+
+def refine_name(name: str) -> str:
+    """
+    Convert e.g. "dAVE    NaiR" → "Dave Nair".
+    Splits on whitespace and capitalizes each part.
+    """
+    parts = name.split()
+    return " ".join(part.capitalize() for part in parts)
 
 
 # --------------------------------------------------------------------------- #
@@ -42,6 +49,7 @@ class CustomSignupView(SignupView):
             for error in errors:
                 messages.error(self.request, error)
         return super().form_invalid(form)
+
 
 # --------------------------------------------------------------------------- #
 #  MFA helpers                                                                #
@@ -144,6 +152,7 @@ def mfa_resend(request):
     messages.info(request, "A new OTP has been sent to your registered email address.")
     return redirect("mfa_verify")
 
+
 # --------------------------------------------------------------------------- #
 #  On-boarding and profile                                                    #
 # --------------------------------------------------------------------------- #
@@ -152,6 +161,7 @@ def mfa_resend(request):
 def onboarding_view(request):
     """
     First-time profile wizard.
+    Refines first, middle, last names to Title Case before saving.
     """
     if not request.session.get("mfa_confirmed", False):
         return redirect("mfa_setup")
@@ -166,20 +176,27 @@ def onboarding_view(request):
 
     if request.method == "POST":
         form = ProfileUpdateForm(request.POST, request.FILES, instance=profile)
-        form.fields["clearance_level"].required = False  # <-- make optional
+        form.fields["clearance_level"].required = False
         if form.is_valid():
-            form.save()
-            profile.onboarding_completed = True
-            profile.save()
+            inst = form.save(commit=False)
+            inst.first_name  = refine_name(inst.first_name or "")
+            inst.middle_name = refine_name(inst.middle_name or "")
+            inst.last_name   = refine_name(inst.last_name or "")
+            inst.onboarding_completed = True
+            inst.save()
             return redirect("profile")
+
         for error in form.errors.get("__all__", []):
             messages.error(request, error)
     else:
         form = ProfileUpdateForm(instance=profile)
-        form.fields["clearance_level"].required = False  # <-- make optional
+        form.fields["clearance_level"].required = False
 
-    context = {"form": form, "onboarding": True, "user": request.user}
-    return render(request, "users/onboarding.html", context)
+    return render(request, "users/onboarding.html", {
+        "form": form,
+        "onboarding": True,
+        "user": request.user,
+    })
 
 
 @login_required
@@ -203,9 +220,58 @@ def profile_view(request, username: str | None = None):
 
     return render(request, "users/profile.html", {"profile": profile})
 
+
 # --------------------------------------------------------------------------- #
 #  Inline / AJAX helpers                                                      #
 # --------------------------------------------------------------------------- #
+
+@login_required
+@require_POST
+def request_name_change_view(request):
+    """
+    Capture a user’s name-change request (first, middle, last),
+    normalize each to Title Case, and reset name_change_done.
+    """
+    if request.headers.get("x-requested-with") != "XMLHttpRequest":
+        return HttpResponseBadRequest("Invalid request")
+
+    raw_first  = request.POST.get("new_first",  "").strip()
+    raw_middle = request.POST.get("new_middle", "").strip()
+    raw_last   = request.POST.get("new_last",   "").strip()
+    reason     = request.POST.get("reason",     "").strip()
+
+    if not raw_first or not raw_last:
+        return JsonResponse({
+            "success": False,
+            "message": "Both first and last names are required."
+        })
+
+    new_first  = refine_name(raw_first)
+    new_middle = refine_name(raw_middle)
+    new_last   = refine_name(raw_last)
+
+    profile = request.user.profile
+    profile.pending_first_name     = new_first
+    profile.pending_middle_name    = new_middle
+    profile.pending_last_name      = new_last
+    profile.pending_name_reason    = reason
+    profile.pending_name_requested = timezone.now()
+    profile.name_change_done       = False
+
+    profile.save(update_fields=[
+        "pending_first_name",
+        "pending_middle_name",
+        "pending_last_name",
+        "pending_name_reason",
+        "pending_name_requested",
+        "name_change_done",
+    ])
+
+    return JsonResponse({
+        "success": True,
+        "message": "Your name-change request has been submitted."
+    })
+
 
 @login_required
 def update_account_view(request):
@@ -267,54 +333,6 @@ def update_personal_view(request):
         messages.success(request, "Personal information updated.")
         return redirect("profile")
     return redirect("profile")
-
-
-@login_required
-@require_POST
-def request_name_change_view(request):
-    """
-    AJAX endpoint to capture a user’s name-change request, now including middle name,
-    and to reset name_change_done so admins will always see a new request.
-    """
-    # Only accept XHR POSTs
-    if request.headers.get("x-requested-with") != "XMLHttpRequest":
-        return HttpResponseBadRequest("Invalid request")
-
-    new_first  = request.POST.get("new_first",  "").strip()
-    new_middle = request.POST.get("new_middle", "").strip()
-    new_last   = request.POST.get("new_last",   "").strip()
-    reason     = request.POST.get("reason",     "").strip()
-
-    # Enforce mandatory first & last
-    if not new_first or not new_last:
-        return JsonResponse({
-            "success": False,
-            "message": "Both first and last names are required."
-        })
-
-    profile = request.user.profile
-
-    # Save all pending fields, clear the admin-done flag
-    profile.pending_first_name     = new_first
-    profile.pending_middle_name    = new_middle
-    profile.pending_last_name      = new_last
-    profile.pending_name_reason    = reason
-    profile.pending_name_requested = timezone.now()
-    profile.name_change_done       = False
-
-    profile.save(update_fields=[
-        "pending_first_name",
-        "pending_middle_name",
-        "pending_last_name",
-        "pending_name_reason",
-        "pending_name_requested",
-        "name_change_done",
-    ])
-
-    return JsonResponse({
-        "success": True,
-        "message": "Your name-change request has been submitted."
-    })
 
 
 @login_required
@@ -403,6 +421,31 @@ def profile_delete_view(request):
         messages.success(request, "Account deleted, what a pity.")
         return redirect("home")
     return render(request, "users/profile_delete.html")
+
+
+class CustomPasswordChangeView(PasswordChangeView):
+    """
+    Force a sign-out after password change and display a success toast
+    on the login page.
+    """
+    template_name = "password_change.html"        # keep your template
+    success_url   = reverse_lazy("account_login")  # where we want to land
+
+    def form_valid(self, form):
+        # 1. Save the new password (does NOT log the user in again)
+        form.save()
+
+        # 2. Flush the session
+        logout(self.request)
+
+        # 3. Use the cookie-based message store (user is now anonymous)
+        messages.success(
+            self.request,
+            "Your password has been changed successfully. Please sign in again."
+        )
+
+        # 4. Go to /accounts/login/
+        return redirect(self.get_success_url())
 
 
 def home_view(request):

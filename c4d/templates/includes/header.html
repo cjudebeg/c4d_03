@@ -1,61 +1,61 @@
 {% load static %}
 <header x-data="{ mobilenavOpen: false }"
-    class="flex md:flex-row w-full bg-gray-800 text-white sticky top-0 z-50 drop-shadow-lg">
+        class="flex md:flex-row w-full bg-gray-800 text-white sticky top-0 z-10 drop-shadow-lg">
     <div class="container flex items-center justify-between h-28">
         <logo>
             <a href="/" class="flex items-center gap-4 md:ml-24 ml-4">
                 <svg width="34px" height="34px" xmlns="http://www.w3.org/2000/svg" xml:space="preserve"
-                    style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2"
-                    viewBox="0 0 146 167">
+                     style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2"
+                     viewBox="0 0 146 167">
                     <path
-                        d="M72.202 162.5 4.167 116.264V1.902h137.655v114.362L92.64 149.933V124.07l27.721-19.123-.08-88.274-48.079 32.963V162.5Z"
-                        style="fill:#346fdd" />
+                      d="M72.202 162.5 4.167 116.264V1.902h137.655v114.362L92.64 149.933V124.07l27.721-19.123-.08-88.274-48.079 32.963V162.5Z"
+                      style="fill:#346fdd" />
                 </svg>
-                <span class="font-script flex font-medium text-xl tracking-[.25rem] items-center">C4 Defence</span>
+                <span class="font-script flex font-medium text-xl tracking-[.25rem] items-center">
+                  C4 Defence
+                </span>
             </a>
         </logo>
-
         <mobileicon class="md:hidden">
             <a @click="mobilenavOpen = !mobilenavOpen"
-                class=" flex items-center justify-center  cursor-pointer hover:bg-blue-500">
+               class="flex items-center justify-center cursor-pointer hover:bg-blue-500">
                 <svg x-show="!mobilenavOpen" class="w-6 h-6 select-none" xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24">
+                     viewBox="0 0 24 24">
                     <path fill-rule="evenodd"
-                        d="M4 5h16a1 1 0 0 1 0 2H4a1 1 0 1 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2z"
-                        style="fill:#ffffff" />
+                          d="M4 5h16a1 1 0 0 1 0 2H4a1 1 0 1 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2z"
+                          style="fill:#ffffff" />
                 </svg>
-                <!-- <svg x-show="mobilenavOpen" class="w-6 h-6 select-none" xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24">
-                    <path fill-rule="evenodd"
-                        d="M4 5h16a1 1 0 0 1 0 2H4a1 1 0 1 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2z"
-                        style="fill:#cf1919" />
-                </svg> -->
-
-
                 <svg x-show="mobilenavOpen" x-cloak class="w-6 h-6 select-none" xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 256 256">
+                     viewBox="0 0 256 256">
                     <path fill-rule="evenodd" stroke-miterlimit="10"
-                        d="M7.719 6.281 6.28 7.72 23.563 25 6.28 42.281 7.72 43.72 25 26.437 42.281 43.72l1.438-1.438L26.437 25 43.72 7.719 42.28 6.28 25 23.563z"
-                        font-family="none" font-size="none" font-weight="none" text-anchor="none"
-                        transform="scale(5.12)" style="fill:#ffffff" />
+                          d="M7.719 6.281 6.28 7.72 23.563 25 6.28 42.281 7.72 43.72 25 26.437 42.281 43.72l1.438-1.438L26.437 25 43.72 7.719 42.28 6.28 25 23.563z"
+                          transform="scale(5.12)"
+                          style="fill:#ffffff" />
                 </svg>
             </a>
         </mobileicon>
     </div>
-
     <nav x-show="mobilenavOpen" x-cloak
-        class="md:!block bg-gray-800 h-screen w-screen mt-20 md:mt-0 md:h-auto px-8 absolute md:static md:mr-24 mr-4"">
-        <ul
-            class=" flex items-center flex-col md:flex-row gap-8 justify-start h-full md:justify-end pt-56 md:p-0
-        md:mr-20 sm:mr-8">
-        {% if request.user.is_authenticated %}
-        <li><a href="/" class="hover:underline">Home</a></li>
-        <li><a href="{% url 'profile' %}" class="hover:underline">Profile</a></li>
-        <li><a href="{% url 'account_logout' %}" class="hover:underline">Logout</a></li>
-        {% else %}
-        <li><a href="{% url 'account_login' %}" class="hover:underline">Sign In</a></li>
-        <li><a href="{% url 'account_signup' %}" class="hover:underline">Register</a></li>
-        {% endif %}
+         class="md:!block bg-gray-800 fixed left-0 w-full h-screen md:h-auto md:static md:mr-24 mr-4">
+        <div class="absolute top-7 right-4 md:hidden">
+            <a @click="mobilenavOpen = false" class="flex items-center justify-center cursor-pointer hover:bg-blue-500">
+                <svg class="w-6 h-6 select-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+                    <path fill-rule="evenodd" stroke-miterlimit="10"
+                          d="M7.719 6.281 6.28 7.72 23.563 25 6.28 42.281 7.72 43.72 25 26.437 42.281 43.72l1.438-1.438L26.437 25 43.72 7.719 42.28 6.28 25 23.563z"
+                          transform="scale(5.12)"
+                          style="fill:#ffffff" />
+                </svg>
+            </a>
+        </div>
+        <ul class="flex items-center flex-col md:flex-row gap-8 justify-start h-full md:justify-end pt-56 md:p-0 sm:mr-8">
+          {% if request.user.is_authenticated %}
+            <li><a href="/" class="hover:underline">Home</a></li>
+            <li><a href="{% url 'profile' %}" class="hover:underline">Profile</a></li>
+            <li><a href="{% url 'account_logout' %}" class="hover:underline">Logout</a></li>
+          {% else %}
+            <li><a href="{% url 'account_login' %}" class="hover:underline">Sign In</a></li>
+            <li><a href="{% url 'account_signup' %}" class="hover:underline">Register</a></li>
+          {% endif %}
         </ul>
     </nav>
 </header>

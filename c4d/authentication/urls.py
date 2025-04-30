@@ -1,3 +1,5 @@
+# urls.py
+
 from django.urls import path
 from .views import (
     onboarding_view,
@@ -9,6 +11,7 @@ from .views import (
     mfa_verify,
     mfa_resend,
     CustomSignupView,
+    CustomPasswordChangeView,       # ← make sure to import this
     update_account_view,
     update_personal_view,
     update_security_view,
@@ -19,7 +22,14 @@ from .views import (
 urlpatterns = [
     path('profile/',                    profile_view,               name='profile'),
     path('onboarding/',                 onboarding_view,            name='onboarding'),
-    path('accounts/signup/',            CustomSignupView.as_view(), name='account_signup'),
+
+    # override allauth signup & password-change
+    path('accounts/signup/',
+         CustomSignupView.as_view(),
+         name='account_signup'),
+    path('accounts/password/change/',
+         CustomPasswordChangeView.as_view(),
+         name='account_change_password'),
 
     path('profile/emailchange/',        profile_emailchange,        name='profile-emailchange'),
     path('profile/emailverify/',        profile_emailverify,        name='profile-emailverify'),
