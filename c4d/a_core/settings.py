@@ -67,6 +67,8 @@ MIDDLEWARE = [
     'allauth.account.middleware.AccountMiddleware',
 
     'debug_toolbar.middleware.DebugToolbarMiddleware',
+
+    'django.middleware.locale.LocaleMiddleware',      # ← add this
 ]
 
 # Configure INTERNAL_IPS for Docker 
@@ -146,7 +148,7 @@ ACCOUNT_FORMS = {
 }
 
 # Internationalisation settings
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en-gb'
 TIME_ZONE = 'Australia/Sydney'
 USE_I18N = True
 USE_TZ = True

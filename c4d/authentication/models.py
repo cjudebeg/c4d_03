@@ -53,9 +53,11 @@ class Profile(models.Model):
     """
     One-to-one companion model for CustomUser.
     """
-    user = models.OneToOneField(settings.AUTH_USER_MODEL,
-                                on_delete=models.CASCADE,
-                                related_name="profile")
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="profile"
+    )
 
     # personal
     first_name    = models.CharField(max_length=30, blank=True, null=True)
@@ -64,27 +66,32 @@ class Profile(models.Model):
     date_of_birth = models.DateField(blank=True, null=True)
 
     # location
-    state  = models.CharField(max_length=3,
-                              choices=STATE_CHOICES,
-                              blank=True,
-                              null=True)
+    state  = models.CharField(
+        max_length=3,
+        choices=STATE_CHOICES,
+        blank=True,
+        null=True
+    )
     suburb = models.CharField(max_length=100, blank=True, null=True)
 
     # clearance
-    clearance_level        = models.CharField(max_length=20,
-                                              choices=CLEARANCE_LEVEL_CHOICES,
-                                              blank=True,
-                                              null=True)
+    clearance_level        = models.CharField(
+        max_length=20,
+        choices=CLEARANCE_LEVEL_CHOICES,
+        blank=True,
+        null=True
+    )
     clearance_no           = models.CharField(max_length=50, blank=True, null=True)
     clearance_revalidation = models.DateField(blank=True, null=True)
-    clearance_valid        = models.CharField(max_length=7,
-                                              choices=CLEARANCE_VALID_CHOICES,
-                                              default="PENDING")
+    clearance_valid        = models.CharField(
+        max_length=7,
+        choices=CLEARANCE_VALID_CHOICES,
+        default="PENDING"
+    )
     clearance_active       = models.BooleanField(default=False)
 
     # skills / onboarding
     skill_sets           = models.TextField(blank=True, null=True)
-    skill_level          = models.CharField(max_length=100, blank=True, null=True)
     onboarding_completed = models.BooleanField(default=False)
 
     # pending-name-change (no extra table)
