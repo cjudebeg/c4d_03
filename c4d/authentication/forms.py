@@ -6,13 +6,28 @@ from django.contrib.auth.forms import UserChangeForm
 from allauth.account.forms import SignupForm, AddEmailForm as AllauthAddEmailForm
 from django.utils.translation import gettext as _
 from allauth.account.models import EmailAddress
-from .models import Profile, STATE_CHOICES, CLEARANCE_LEVEL_CHOICES
+
+# Import Profile and choices which should always be available
+try:
+    from .models import Profile, STATE_CHOICES, CLEARANCE_LEVEL_CHOICES
+except ImportError:
+    # For testing/development without models
+    Profile = None
+    STATE_CHOICES = [("VIC", "VIC"), ("NSW", "NSW")]
+    CLEARANCE_LEVEL_CHOICES = [("None", "None"), ("Baseline", "Baseline")]
+
+# Try importing job models - may not exist yet
+try:
+    from .models import Job, JobApplication, Rfqt, Message
+    JOB_MODELS_EXIST = True
+except ImportError:
+    JOB_MODELS_EXIST = False
 
 User = get_user_model()
 
 
 class AddEmailForm(AllauthAddEmailForm):
-    # For adding emails in “Add email” section
+    # For adding emails in "Add email" section
     # Prevents duplicates and disallowed local parts
     def clean_email(self):
         email = super().clean_email()
@@ -249,3 +264,105 @@ class EmailForm(forms.Form):
         if local_part in ["root", "admin", "sa"]:
             raise forms.ValidationError(_("This email address is not allowed."))
         return email
+
+
+# ---------- JOB RELATED FORMS ---------- #
+
+if JOB_MODELS_EXIST:
+    class RfqtForm(forms.ModelForm):
+        class Meta:
+            model = Rfqt
+            fields = '__all__'
+            widgets = {
+                'commencement_date_for_task': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+                'completion_date_for_task': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+                'closing_date_for_quotation': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+                'skills_sets': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+                'scope_of_task': forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
+            }
+
+
+    class JobForm(forms.ModelForm):
+        class Meta:
+            model = Job
+            fields = [
+                'title', 'short_description', 'description', 'job_type', 'location',
+                'salary', 'clearance', 'skills_sets', 'skills_levels',
+                'commencement_date', 'completion_date', 'closing_date', 'is_active', 'rfqts_no'
+            ]
+            widgets = {
+                'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Job Title'}),
+                'short_description': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Brief summary (200 chars max)'}),
+                'description': forms.Textarea(attrs={'rows': 5, 'class': 'form-control', 'placeholder': 'Detailed job description'}),
+                'job_type': forms.Select(attrs={'class': 'form-control'}),
+                'location': forms.Select(attrs={'class': 'form-control'}),
+                'salary': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Salary range or rate'}),
+                'clearance': forms.Select(attrs={'class': 'form-control'}),
+                'skills_sets': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Required skills'}),
+                'skills_levels': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Required skill levels'}),
+                'commencement_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+                'completion_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+                'closing_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+                'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            }
+
+
+    class JobApplicationForm(forms.ModelForm):
+        class Meta:
+            model = JobApplication
+            fields = [
+                'full_name', 'current_clearance', 'clearance_expiry_date',
+                'clearance_number', 'location_of_residence', 'date_of_birth',
+                'earliest_start_date', 'proposed_rate', 'proposed_salary',
+                'planned_leave', 'available_for_interview', 'cover_letter', 'resume'
+            ]
+            widgets = {
+                'full_name': forms.TextInput(attrs={'class': 'form-control'}),
+                'current_clearance': forms.TextInput(attrs={'class': 'form-control'}),
+                'clearance_expiry_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+                'clearance_number': forms.TextInput(attrs={'class': 'form-control'}),
+                'location_of_residence': forms.TextInput(attrs={'class': 'form-control'}),
+                'date_of_birth': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+                'earliest_start_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+                'proposed_rate': forms.TextInput(attrs={'class': 'form-control'}),
+                'proposed_salary': forms.TextInput(attrs={'class': 'form-control'}),
+                'planned_leave': forms.TextInput(attrs={'class': 'form-control'}),
+                'available_for_interview': forms.Select(attrs={'class': 'form-control'}, 
+                                                    choices=[('Yes', 'Yes'), ('No', 'No')]),
+                'cover_letter': forms.Textarea(attrs={'rows': 5, 'class': 'form-control'}),
+            }
+
+
+    class JobSearchForm(forms.Form):
+        job_type = forms.ChoiceField(
+            required=False,
+            choices=[('', 'All Types')] + Job.JOB_TYPES,
+            widget=forms.Select(attrs={'class': 'form-select'})
+        )
+        location = forms.ChoiceField(
+            required=False,
+            choices=[('', 'All Locations')] + Job.LOCATIONS,
+            widget=forms.Select(attrs={'class': 'form-select'})
+        )
+        clearance = forms.ChoiceField(
+            required=False,
+            choices=[('', 'All Clearances')] + CLEARANCE_LEVEL_CHOICES,
+            widget=forms.Select(attrs={'class': 'form-select'})
+        )
+        keyword = forms.CharField(
+            required=False,
+            widget=forms.TextInput(attrs={'placeholder': 'Search keywords', 'class': 'form-input'})
+        )
+
+
+    class MessageForm(forms.ModelForm):
+        class Meta:
+            model = Message
+            fields = ['content']
+            widgets = {
+                'content': forms.Textarea(attrs={
+                    'rows': 3,
+                    'placeholder': 'Type your message here...',
+                    'class': 'w-full p-2 rounded border'
+                }),
+            }

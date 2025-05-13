@@ -1,0 +1,133 @@
+/*------------------------------------------------------------------
+[Master Stylesheet]
+
+Project                            :   Xintra - Django Tailwind Admin Template
+Create Date                        :   18/November/2024
+Author & Copyright Ownership       :   Spruko Technologies Private Limited 
+Author URL                         :   https://themeforest.net/user/spruko
+Support	                           :   https://support.spruko.com/
+License Details                    :   https://spruko.com/licenses-details
+------------------------------------------------------------------*/
+
+/* Table Of Content 
+variables
+switcher
+accordion
+alerts
+badge
+breadcrumb
+buttons
+cards
+dropdown
+forms
+input_group
+list_group
+modals
+navbar
+navs_tabs
+pagination
+popovers
+progress
+tables
+toast
+tooltips
+authentication
+custom
+dashboard_styles
+error
+header
+plugins
+ribbons
+widgets
+closed_menu
+detached_menu
+double_menu
+horizontal
+icon_click
+icon_hover
+icon_overlay
+icontext
+menu_click
+menu_hover
+vertical
+chat
+ecommerce
+file-manager
+landing
+mail
+task
+avatars
+background
+border
+opacity
+typography
+*/
+
+
+
+
+@use "variables";
+@forward "switcher";
+@forward "icons";
+
+/* CUSTOM */  
+@forward "custom/authentication";
+@forward "custom/custom";
+@forward "custom/dashboard_styles";
+@forward "custom/error";
+@forward "custom/header";
+@forward "custom/plugins";
+@forward "custom/ribbons";
+@forward "custom/widgets";
+
+/* MENU-STYLES */
+@forward "menu-styles/closed_menu";
+@forward "menu-styles/detached_menu";
+@forward "menu-styles/double_menu";
+@forward "menu-styles/horizontal";
+@forward "menu-styles/icon_click";
+@forward "menu-styles/icon_hover";
+@forward "menu-styles/icon_overlay";
+@forward "menu-styles/icontext";
+@forward "menu-styles/menu_click";
+@forward "menu-styles/menu_hover";
+@forward "menu-styles/vertical";
+
+// /* PAGES */
+@forward "pages/chat";
+@forward "pages/ecommerce";
+@forward "pages/file-manager";
+@forward "pages/landing";
+@forward "pages/mail";
+@forward "pages/task";
+
+/* TAILWIND */
+@forward "tailwind/accordion";
+@forward "tailwind/alerts";
+@forward "tailwind/avatars";
+@forward "tailwind/breadcrumb";  
+@forward "tailwind/buttons";
+@forward "tailwind/cards";
+@forward "tailwind/carousels";
+@forward "tailwind/components";
+@forward "tailwind/dropdown";
+@forward "tailwind/forms";
+@forward "tailwind/modal";
+@forward "tailwind/offcanvas";
+@forward "tailwind/pagination";
+@forward "tailwind/progress";
+@forward "tailwind/tables";
+@forward "tailwind/tailwind";
+@forward "tailwind/toast";
+@forward "tailwind/tooltip";
+
+/* UTILITIES */
+@forward "util/avatars";
+@forward "util/background";
+@forward "util/border";
+@forward "util/typography";
+
+
+/* FONT */
+/* Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
